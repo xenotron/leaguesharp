@@ -4,41 +4,44 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using System.Windows.Forms;
-
 using LeagueSharp;
+using LeagueSharp.Common;
 using SharpDX;
 
-namespace UnitTest
+
+namespace AutoLantern
 {
     class Program
     {
+        private static Menu Menu;
         private static Obj_AI_Hero Player;
         private static GameObject ThreshLantern;
         private static string lantern = "ThreshLantern";
-        private static int hotkey = 32; //Spacebar
-        private static bool hotkeyPressed;
-        private static int HPPercent = 20; //IsLow() HP percent
 
-        [STAThread]
         static void Main(string[] args)
         {
             Game.OnGameStart += OnGameStart;
             Game.OnGameUpdate += OnGameUpdate;
             Obj_AI_Minion.OnCreate += OnMinionCreation;
             Obj_AI_Minion.OnDelete += OnMinionDeletion;
-            Game.OnWndProc += OnWndProc;
         }
 
         static void OnGameStart(EventArgs args)
         {
+
+            Menu = new Menu("AutoLantern", "AutoLantern", true);
+            Menu.AddItem(new MenuItem("Auto", "Auto-Lantern at Low HP").SetValue(true));
+            Menu.AddItem(new MenuItem("Low", "Low HP Percent").SetValue(new Slider(20, 30, 5)));
+            Menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(32, KeyBindType.Press, false)));
+            Menu.AddToMainMenu();
+      
             Game.PrintChat("AutoLantern by Trees loaded.");
             Player = ObjectManager.Player;
         }
 
         private static void OnGameUpdate(EventArgs args)
         {
-            if (IsValid(ThreshLantern) && (IsLow() || hotkeyPressed))
+            if (IsValid(ThreshLantern) && (IsLow() || (Menu.Item("Hotkey").GetValue<bool>())))
                 InteractObject(ThreshLantern);
         }
 
@@ -54,20 +57,9 @@ namespace UnitTest
                 ThreshLantern = null;
         }
 
-        private static void OnWndProc(WndEventArgs args)
-        {
-            if (args.Msg == hotkey)
-            {
-                if (args.WParam == 0x0100)
-                    hotkeyPressed = true;
-                else
-                    hotkeyPressed = false;
-            }
-        }
-
         private static bool IsLow()
         {
-            if (Player.Health < Player.MaxHealth * HPPercent / 100)
+            if (Player.Health < Player.MaxHealth * Menu.Item("Low").GetValue<int>() / 100)
                 return true;
             return false;
         }
