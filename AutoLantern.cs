@@ -61,7 +61,7 @@ namespace AutoLantern
 
         private static bool IsValid(GameObject lant)
         {
-            if (lant != null && lant.IsValid && Vector3.Distance(ObjectManager.Player.ServerPosition, lant.Position) <= 300)
+            if (lant != null && lant.IsValid && Vector3.Distance(Player.ServerPosition, lant.Position) <= 300)
                 return true;
             return false;
         }
