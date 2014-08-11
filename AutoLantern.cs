@@ -73,7 +73,7 @@ namespace AutoLantern
                 using (var binaryWriter = new BinaryWriter(memoryStream))
                 {
                     binaryWriter.Write((byte)0x3A);
-                    binaryWriter.Write((int)ObjectManager.Player.NetworkId);
+                    binaryWriter.Write((int)Player.NetworkId);
                     binaryWriter.Write((int)obj.NetworkId);
                     Game.SendPacket(memoryStream.ToArray(), PacketChannel.C2S, PacketProtocolFlags.NoFlags);
                 }
