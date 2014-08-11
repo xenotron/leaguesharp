@@ -15,14 +15,19 @@ namespace AutoLantern
         private static Menu Menu;
         private static Obj_AI_Hero Player;
         private static GameObject ThreshLantern;
-        private static string lantern = "ThreshLantern";
+        private static readonly string lantern = "ThreshLantern";
 
         static void Main(string[] args)
         {
+            CustomEvents.Game.OnGameLoad += OnGameLoad;
             Game.OnGameUpdate += OnGameUpdate;
             Obj_AI_Minion.OnCreate += OnMinionCreation;
             Obj_AI_Minion.OnDelete += OnMinionDeletion;
 
+        }
+
+        private static void OnGameLoad(EventArgs args)
+        {
             Menu = new Menu("AutoLantern", "AutoLantern", true);
             Menu.AddItem(new MenuItem("Auto", "Auto-Lantern at Low HP").SetValue(true));
             Menu.AddItem(new MenuItem("Low", "Low HP Percent").SetValue(new Slider(20, 30, 5)));
@@ -31,7 +36,6 @@ namespace AutoLantern
 
             Game.PrintChat("AutoLantern by Trees loaded.");
             Player = ObjectManager.Player;
-
         }
 
         private static void OnGameUpdate(EventArgs args)
