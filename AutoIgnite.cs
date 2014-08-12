@@ -51,10 +51,8 @@ namespace AutoIgnite
 
         private static bool CanIgnite()
         {
-            if (Ignite != null && Ignite.Slot != SpellSlot.Unknown && Ignite.State == SpellState.Ready &&
-               Player.CanCast)
-                return true;
-            return false;
+            return Ignite != null && Ignite.Slot != SpellSlot.Unknown && Ignite.State == SpellState.Ready &&
+               Player.CanCast;
         }
 
         private static void CastIgnite(Obj_AI_Hero enemy)
