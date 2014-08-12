@@ -30,9 +30,11 @@ namespace AutoLantern
             Menu.AddItem(new MenuItem("Low", "Low HP Percent").SetValue(new Slider(20, 30, 5)));
             Menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(32, KeyBindType.Press, false)));
             Menu.AddToMainMenu();
+            
             Game.OnGameUpdate += OnGameUpdate;
             Obj_AI_Minion.OnCreate += OnMinionCreation;
             Obj_AI_Minion.OnDelete += OnMinionDeletion;
+            
             Game.PrintChat("AutoLantern by Trees loaded.");
             Player = ObjectManager.Player;
         }
