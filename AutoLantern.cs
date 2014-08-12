@@ -20,7 +20,6 @@ namespace AutoLantern
         static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += OnGameLoad;
-
         }
 
         private static void OnGameLoad(EventArgs args)
@@ -59,16 +58,12 @@ namespace AutoLantern
 
         private static bool IsLow()
         {
-            if (Player.Health < Player.MaxHealth * Menu.Item("Low").GetValue<int>() / 100)
-                return true;
-            return false;
+            return Player.Health < Player.MaxHealth * Menu.Item("Low").GetValue<int>() / 100);
         }
 
         private static bool IsValid(GameObject lant)
         {
-            if (lant != null && lant.IsValid && Vector3.Distance(Player.ServerPosition, lant.Position) <= 300)
-                return true;
-            return false;
+            return lant != null && lant.IsValid && Vector3.Distance(Player.ServerPosition, lant.Position) <= 300);
         }
 
         private static void InteractObject(GameObject obj)
