@@ -27,7 +27,7 @@ namespace QuickTeleport
         private static void OnGameLoad(EventArgs args)
         {
             Player = ObjectManager.Player;
-            Teleport = GetTeleport();
+            Teleport = Player.GetSpellSlot("SummonerTeleport");
             if (Teleport == null)
                 return;
 
@@ -54,12 +54,6 @@ namespace QuickTeleport
 
             if (ClosestObject != Player && ClosestObject != null)
                 CastTeleport(ClosestObject);
-        }
-
-        private static SpellDataInst GetTeleport()
-        {
-            var spells = Player.SummonerSpellbook.Spells;
-            return spells.FirstOrDefault(spell => spell.Name == "SummonerTeleport");
         }
 
         private static bool CanTeleport()
