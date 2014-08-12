@@ -49,7 +49,7 @@ namespace QuickTeleport
             foreach (var obj in ObjectManager.Get<Obj_AI_Base>().Where(obj => obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == Player.Team && obj.Type != Player.Type && obj.ServerPosition.Distance(Game.CursorPos) < d))
             {
                 ClosestObject = obj;
-                d = Vector3.Distance(obj.ServerPosition, Game.CursorPos);
+                d = obj.ServerPosition.Distance(Game.CursorPos);
             }
 
             if (ClosestObject != Player && ClosestObject != null)
