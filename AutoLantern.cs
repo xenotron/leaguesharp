@@ -63,7 +63,7 @@ namespace AutoLantern
 
         private static bool IsValid(GameObject lant)
         {
-            return lant != null && lant.IsValid && Vector3.Distance(Player.ServerPosition, lant.Position) <= 300);
+            return lant != null && lant.IsValid && Player.ServerPosition.Distance(lant.Position) <= 300);
         }
 
         private static void InteractObject(GameObject obj)
