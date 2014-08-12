@@ -29,7 +29,7 @@ namespace AutoIgnite
             Player = ObjectManager.Player;
             
             Ignite = Player.GetSpellSlot("SummonerDot");
-            if (Ignite == null)
+            if (Ignite == null || Ignite.Slot == SpellSlot.Unknown)
              return;
              
             Game.OnGameUpdate += Game_OnGameUpdate;
