@@ -28,7 +28,7 @@ namespace QuickTeleport
         {
             Player = ObjectManager.Player;
             Teleport = Player.GetSpellSlot("SummonerTeleport");
-            if (Teleport == null)
+            if (Teleport == null || Teleport.Slot == SpellSlot.Unknown)
                 return;
 
             Menu = new Menu("QuickTeleport", "QuickTeleport", true);
