@@ -30,7 +30,7 @@ namespace AutoIgnite
             if (!CanIgnite())
                 return;
             int dmg = 50 + 20 * Player.Level;
-            foreach (Obj_AI_Hero hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero != null && hero.IsValid && hero.Health < dmg))
+            foreach (Obj_AI_Hero hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero != null && hero.IsValid && hero.IsVisible && hero.Health < dmg && Vector3.Distance(Player.ServerPosition, hero.ServerPosition) <= 600))
                 CastIgnite(hero);
         }
 
