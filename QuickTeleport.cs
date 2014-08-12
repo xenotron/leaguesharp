@@ -22,7 +22,6 @@ namespace QuickTeleport
         static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += OnGameLoad;
-            Game.OnGameUpdate += Game_OnGameUpdate;
         }
 
         private static void OnGameLoad(EventArgs args)
@@ -35,6 +34,7 @@ namespace QuickTeleport
             Menu = new Menu("QuickTeleport", "QuickTeleport", true);
             Menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(16, KeyBindType.Press, false)));
             Menu.AddToMainMenu();
+            Game.OnGameUpdate += Game_OnGameUpdate;
             Game.PrintChat("QuickTeleport by Trees loaded.");
         }
 
@@ -46,7 +46,7 @@ namespace QuickTeleport
             Obj_AI_Base ClosestObject = Player;
             float d = 3000;
 
-            foreach (Obj_AI_Base obj in ObjectManager.Get<Obj_AI_Base>().Where(obj => obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == Player.Team && obj.Type != Player.Type && Vector3.Distance(obj.ServerPosition, Game.CursorPos) < d))
+            foreach (var obj in ObjectManager.Get<Obj_AI_Base>().Where(obj => obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == Player.Team && obj.Type != Player.Type && Vector3.Distance(obj.ServerPosition, Game.CursorPos) < d))
             {
                 ClosestObject = obj;
                 d = Vector3.Distance(obj.ServerPosition, Game.CursorPos);
@@ -64,10 +64,8 @@ namespace QuickTeleport
 
         private static bool CanTeleport()
         {
-            if (Teleport != null && Teleport.Slot != SpellSlot.Unknown && Teleport.State == SpellState.Ready &&
-               Player.CanCast)
-                return true;
-            return false;
+            return Teleport != null && Teleport.Slot != SpellSlot.Unknown && Teleport.State == SpellState.Ready &&
+               Player.CanCast;
         }
 
         private static void CastTeleport(Obj_AI_Base unit)
