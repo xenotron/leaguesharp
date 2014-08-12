@@ -15,7 +15,7 @@ namespace AutoLantern
         private static Menu Menu;
         private static Obj_AI_Hero Player;
         private static GameObject ThreshLantern;
-        private static readonly String lantern = "ThreshLantern";
+        private const String lantern = "ThreshLantern";
 
         static void Main(string[] args)
         {
