@@ -17,6 +17,12 @@ namespace QuickTeleport
 
         static void Main(string[] args)
         {
+            CustomEvents.Game.OnGameLoad += OnGameLoad;
+            Game.OnGameUpdate += Game_OnGameUpdate;
+        }
+
+        private static void OnGameLoad(EventArgs args)
+        {
             Player = ObjectManager.Player;
             Teleport = GetTeleport();
             if (Teleport == null)
@@ -26,23 +32,23 @@ namespace QuickTeleport
             Menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(16, KeyBindType.Press, false)));
             Menu.AddToMainMenu();
             Game.PrintChat("QuickTeleport by Trees loaded.");
-            Game.OnGameUpdate += Game_OnGameUpdate;
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
             if (!CanTeleport() || !Menu.Item("Hotkey").GetValue<bool>())
                 return;
-            
+
             Obj_AI_Base ClosestObject = Player;
             float d = 3000;
 
-            foreach(Obj_AI_Base obj in ObjectManager.Get<Obj_AI_Base>().Where(obj => obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == Player.Team && Vector3.Distance(obj.ServerPosition, Game.CursorPos) < d)){
+            foreach (Obj_AI_Base obj in ObjectManager.Get<Obj_AI_Base>().Where(obj => obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == Player.Team && obj.Type != Player.Type && Vector3.Distance(obj.ServerPosition, Game.CursorPos) < d))
+            {
                 ClosestObject = obj;
                 d = Vector3.Distance(obj.ServerPosition, Game.CursorPos);
             }
 
-            if(ClosestObject != Player && ClosestObject != null)
+            if (ClosestObject != Player && ClosestObject != null)
                 CastTeleport(ClosestObject);
         }
 
