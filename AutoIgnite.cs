@@ -18,10 +18,17 @@ namespace AutoIgnite
 
         static void Main(string[] args)
         {
+            CustomEvents.Game.OnGameLoad += OnGameLoad;
+        }
+        
+        private static void OnGameLoad(EventArgs args)
+        {
             Player = ObjectManager.Player;
+            
             Ignite = GetIgnite();
             if (Ignite == null)
-                return;
+             return;
+             
             Game.OnGameUpdate += Game_OnGameUpdate;
         }
 
