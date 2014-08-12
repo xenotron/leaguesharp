@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LeagueSharp;
+using LeagueSharp.Common;
 using SharpDX;
 
 #endregion
@@ -27,7 +28,7 @@ namespace AutoIgnite
         {
             Player = ObjectManager.Player;
             
-            Ignite = GetIgnite();
+            Ignite = Player.GetSpellSlot("SummonerDot");
             if (Ignite == null)
              return;
              
@@ -41,12 +42,6 @@ namespace AutoIgnite
             int dmg = 50 + 20 * Player.Level;
             foreach (Obj_AI_Hero hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero != null && hero.IsValid && hero.IsVisible && !hero.IsDead && hero.Health < dmg && Player.ServerPosition.Distance(hero.ServerPosition) <= 600))
                 CastIgnite(hero);
-        }
-
-        private static SpellDataInst GetIgnite()
-        {
-            var spells = Player.SummonerSpellbook.Spells;
-            return spells.FirstOrDefault(spell => spell.Name == "SummonerDot");
         }
 
         private static bool CanIgnite()
