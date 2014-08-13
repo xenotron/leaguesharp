@@ -27,7 +27,7 @@ namespace QuickTeleport
         private static void OnGameLoad(EventArgs args)
         {
             Player = ObjectManager.Player;
-            Teleport = Player.GetSpellSlot("SummonerTeleport");
+            Teleport = Player.Spellbook.GetSpell(Player.GetSpellSlot("SummonerTeleport"));
             if (Teleport == null || Teleport.Slot == SpellSlot.Unknown)
                 return;
 
