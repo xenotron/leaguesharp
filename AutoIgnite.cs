@@ -23,15 +23,15 @@ namespace AutoIgnite
         {
             CustomEvents.Game.OnGameLoad += OnGameLoad;
         }
-        
+
         private static void OnGameLoad(EventArgs args)
         {
             Player = ObjectManager.Player;
-            
-            Ignite = Player.GetSpellSlot("SummonerDot");
+
+            Ignite = Player.Spellbook.GetSpell(Player.GetSpellSlot("SummonerDot"));
             if (Ignite == null || Ignite.Slot == SpellSlot.Unknown)
-             return;
-             
+                return;
+
             Game.OnGameUpdate += Game_OnGameUpdate;
         }
 
