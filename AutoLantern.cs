@@ -29,11 +29,11 @@ namespace AutoLantern
             Menu.AddItem(new MenuItem("Low", "Low HP Percent").SetValue(new Slider(20, 30, 5)));
             Menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(32, KeyBindType.Press, false)));
             Menu.AddToMainMenu();
-            
+
             Game.OnGameUpdate += OnGameUpdate;
             Obj_AI_Minion.OnCreate += OnMinionCreation;
             Obj_AI_Minion.OnDelete += OnMinionDeletion;
-            
+
             Game.PrintChat("AutoLantern by Trees loaded.");
             Player = ObjectManager.Player;
         }
@@ -58,12 +58,12 @@ namespace AutoLantern
 
         private static bool IsLow()
         {
-            return Player.Health < Player.MaxHealth * Menu.Item("Low").GetValue<int>() / 100);
+            return Player.Health < Player.MaxHealth * Menu.Item("Low").GetValue<int>() / 100;
         }
 
         private static bool IsValid(GameObject lant)
         {
-            return lant != null && lant.IsValid && Player.ServerPosition.Distance(lant.Position) <= 300);
+            return lant != null && lant.IsValid && Player.ServerPosition.Distance(lant.Position) <= 300;
         }
 
         private static void InteractObject(GameObject obj)
