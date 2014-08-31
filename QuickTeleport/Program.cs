@@ -29,6 +29,7 @@ namespace QuickTeleport
 
             _menu = new Menu("QuickTeleport", "QuickTeleport", true);
             _menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(16, KeyBindType.Press, false)));
+            _menu.AddItem(new MenuItem("Turret", "QT to Turrets Only").SetValue(true));
             _menu.AddToMainMenu();
             Game.OnGameUpdate += Game_OnGameUpdate;
             Game.PrintChat("QuickTeleport by Trees loaded.");
@@ -40,7 +41,7 @@ namespace QuickTeleport
                 return;
 
             Obj_AI_Base closestObject = _player;
-            float d = 3000;
+            float d = 2000;
 
             foreach (
                 var obj in
@@ -48,7 +49,9 @@ namespace QuickTeleport
                         .Where(
                             obj =>
                                 obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == _player.Team &&
-                                obj.Type != _player.Type && obj.ServerPosition.Distance(Game.CursorPos) < d))
+                                obj.Type != _player.Type &&
+                                (obj is Obj_AI_Turret || !_menu.Item("Turret").GetValue<bool>()) &&
+                                obj.ServerPosition.Distance(Game.CursorPos) < d))
             {
                 closestObject = obj;
                 d = obj.ServerPosition.Distance(Game.CursorPos);
