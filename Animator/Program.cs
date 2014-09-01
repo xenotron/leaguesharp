@@ -21,6 +21,7 @@ namespace Animator
         {
             _menu = new Menu("Animator", "Animator", true);
             _menu.AddItem(new MenuItem("Count", "Receive Count").SetValue(10));
+            _menu.AddToMainMenu();
 
             Game.OnGameProcessPacket += GameOnOnGameProcessPacket;
         }
