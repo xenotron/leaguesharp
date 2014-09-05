@@ -94,7 +94,7 @@ namespace TUrgot
             SmartQ();
 
             var target = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Physical);
-            if (target == null || Menu.Item("ComboActive").GetValue<KeyBind>().Active) return;
+            if (target == null || !Menu.Item("ComboActive").GetValue<KeyBind>().Active) return;
 
             CastE(target);
             CastQ(target);
@@ -113,8 +113,9 @@ namespace TUrgot
                                 obj.IsValid && obj.IsEnemy && obj.HasBuff("UrgotCorrosiveDebuff") &&
                                 obj.IsValidTarget(Q2.Range, true, Player.ServerPosition)))
             {
-                CastW();
-                Q2.Cast(obj.ServerPosition);
+                W.Cast();
+                Packet.C2S.Cast.Encoded(
+                   new Packet.C2S.Cast.Struct(0, SpellSlot.Q, Player.NetworkId, Player.Position.X, Player.Position.Y, obj.ServerPosition.X, obj.ServerPosition.Y)).Send();
                 return;
             }
         }
@@ -122,14 +123,8 @@ namespace TUrgot
         private static void CastQ(Obj_AI_Base target)
         {
             if (Q.IsReady() && Menu.Item("Q").GetValue<bool>() &&
-                Player.ServerPosition.Distance(target.ServerPosition) < Q.Range)
+                Player.Distance(target) < Q.Range)
                 Q.Cast(target);
-        }
-
-        private static void CastW()
-        {
-            if (W.IsReady())
-                W.Cast();
         }
 
         private static void CastE(Obj_AI_Base target)
