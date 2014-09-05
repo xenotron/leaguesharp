@@ -15,7 +15,7 @@ namespace TUrgot
     {
         public const string ChampName = "Urgot";
         public static Orbwalking.Orbwalker Orbwalker;
-        public static readonly Obj_AI_Base Player = ObjectManager.Player;
+        public static readonly Obj_AI_Hero Player = ObjectManager.Player;
 
         public static List<Spell> SpellList = new List<Spell>();
         public static Spell Q, Q2, W, E;
@@ -91,6 +91,7 @@ namespace TUrgot
 
         private static void CastLogic()
         {
+            //KSLogic();
             SmartQ();
 
             var target = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Physical);
@@ -114,9 +115,7 @@ namespace TUrgot
                                 obj.IsValidTarget(Q2.Range, true, Player.ServerPosition)))
             {
                 W.Cast();
-                Packet.C2S.Cast.Encoded(
-                   new Packet.C2S.Cast.Struct(0, SpellSlot.Q, Player.NetworkId, Player.Position.X, Player.Position.Y, obj.ServerPosition.X, obj.ServerPosition.Y)).Send();
-                return;
+                Q2.Cast(obj.ServerPosition);
             }
         }
 
@@ -137,5 +136,24 @@ namespace TUrgot
             else
                 E.CastIfHitchanceEquals(SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical), HitChance.High);
         }
+
+        /*private static void KSLogic()
+{
+
+}
+
+private static void KSIgnite()
+{
+    var dmg = 50 + 20 * Player.Level;
+    foreach (
+        var obj in
+            ObjectManager.Get<Obj_AI_Hero>()
+                .Where(obj => obj.IsValid && obj.IsEnemy && obj.IsValidTarget(600, true, Player.ServerPosition) &&
+            obj.Health < dmg))
+    {
+
+    }
+}*/
+
     }
 }
