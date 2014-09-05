@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 
@@ -79,7 +80,7 @@ namespace TUrgot
             CastLogic();
         }
 
-        public static void Drawing_OnDraw(EventArgs args)
+        private static void Drawing_OnDraw(EventArgs args)
         {
             var DrawQ = Menu.Item("QRange").GetValue<Circle>();
             var DrawE = Menu.Item("ERange").GetValue<Circle>();
@@ -101,15 +102,21 @@ namespace TUrgot
 
         private static void SmartQ()
         {
-            var target = SimpleTs.GetTarget(Q2.Range, SimpleTs.DamageType.Physical);
-
-            if (target == null || !Q.IsReady() || !Menu.Item("AutoQ").GetValue<bool>() || !target.HasBuff("UrgotCorrosiveDebuff"))
+            if (!Q.IsReady() || !Menu.Item("AutoQ").GetValue<bool>())
                 return;
 
-            CastW();
-
-            if (Player.ServerPosition.Distance(target.ServerPosition) < Q2.Range)
-                Q2.Cast(target.ServerPosition);
+            foreach (
+                var obj in
+                    ObjectManager.Get<Obj_AI_Hero>()
+                        .Where(
+                            obj =>
+                                obj.IsValid && obj.IsEnemy && obj.HasBuff("UrgotCorrosiveDebuff") &&
+                                obj.IsValidTarget(Q2.Range, true, Player.ServerPosition)))
+            {
+                CastW();
+                Q2.Cast(obj.ServerPosition);
+                return;
+            }
         }
 
         private static void CastQ(Obj_AI_Base target)
