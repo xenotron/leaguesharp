@@ -111,7 +111,7 @@ namespace TUrgot
                     ObjectManager.Get<Obj_AI_Hero>()
                         .Where(
                             obj =>
-                                obj.IsValid && obj.IsEnemy && obj.HasBuff("UrgotCorrosiveDebuff") &&
+                                obj.IsValid && obj.IsEnemy && obj.HasBuff("UrgotPlasmaGrenadeBoom") &&
                                 obj.IsValidTarget(Q2.Range, true, Player.ServerPosition)))
             {
                 W.Cast();
