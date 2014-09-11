@@ -20,7 +20,7 @@ namespace Animator
         private static void Game_OnGameLoad(EventArgs args)
         {
             _menu = new Menu("Animator", "Animator", true);
-            _menu.AddItem(new MenuItem("Count", "Receive Count").SetValue(10));
+            _menu.AddItem(new MenuItem("Count", "Receive Count").SetValue(new Slider(10, 2, 20)));
             _menu.AddToMainMenu();
 
             Game.OnGameProcessPacket += GameOnOnGameProcessPacket;
@@ -31,7 +31,7 @@ namespace Animator
             if (args.PacketData[0] != 0x87)
                 return;
 
-            for (var i = 0; i < _menu.Item("Count").GetValue<int>(); i++)
+            for (var i = 0; i < _menu.Item("Count").GetValue<Slider>().Value; i++)
                 Game.ProcessPacket(args.PacketData, PacketChannel.S2C);
         }
     }
