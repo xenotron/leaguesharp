@@ -37,7 +37,7 @@ namespace QuickTeleport
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            if (!CanTeleport() || !_menu.Item("Hotkey").GetValue<bool>())
+            if (!CanTeleport() || !_menu.Item("Hotkey").GetValue<KeyBind>().Active)
                 return;
 
             Obj_AI_Base closestObject = _player;
