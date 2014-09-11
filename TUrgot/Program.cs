@@ -60,14 +60,14 @@ namespace TUrgot
             Menu.AddSubMenu(new Menu("Combo", "Combo"));
             Menu.SubMenu("Combo").AddItem(new MenuItem("ComboQ", "Use Q").SetValue(true));
             Menu.SubMenu("Combo").AddItem(new MenuItem("ComboE", "Use E").SetValue(true));
-            Menu.SubMenu("Combo").AddItem(new MenuItem("ComboEChance", "E HitChance").SetValue(new Slider(2, 1, 3)));
+            Menu.SubMenu("Combo").AddItem(new MenuItem("ComboEChance", "E HitChance").SetValue(new Slider(1, 1, 3)));
             Menu.SubMenu("Combo")
                 .AddItem(new MenuItem("ComboActive", "Combo").SetValue(new KeyBind(32, KeyBindType.Press)));
 
             Menu.AddSubMenu(new Menu("Harass", "Harass"));
             Menu.SubMenu("Harass").AddItem(new MenuItem("HarassQ", "Use Q").SetValue(true));
             Menu.SubMenu("Harass").AddItem(new MenuItem("HarassE", "Use E").SetValue(true));
-            Menu.SubMenu("Harass").AddItem(new MenuItem("HarassEChance", "E HitChance").SetValue(new Slider(3, 1, 3)));
+            Menu.SubMenu("Harass").AddItem(new MenuItem("HarassEChance", "E HitChance").SetValue(new Slider(2, 1, 3)));
             Menu.SubMenu("Harass")
                 .AddItem(new MenuItem("HarassActive", "Harass").SetValue(new KeyBind((byte)'C', KeyBindType.Press)));
 
@@ -97,7 +97,9 @@ namespace TUrgot
             var DrawE = Menu.Item("ERange").GetValue<Circle>();
 
             if (DrawQ.Active) Utility.DrawCircle(Player.Position, Q.Range, DrawQ.Color);
-            if (DrawE.Active) Utility.DrawCircle(Player.Position, E.Range, DrawQ.Color);
+            if (DrawE.Active) Utility.DrawCircle(Player.Position, E.Range, DrawE.Color);
+            //var pos = Drawing.WorldToScreen(Game.CursorPos);
+            // Drawing.DrawText(pos.X, pos.Y + 50, Color.Red, Math.Round(pos.X).ToString() + " , " + Math.Round(pos.Y).ToString());
         }
 
         private static void CastLogic()
@@ -131,6 +133,7 @@ namespace TUrgot
             {
                 W.Cast();
                 Q2.Cast(obj.ServerPosition);
+                //Game.PrintChat("Cast Q2");
             }
         }
 
@@ -138,7 +141,10 @@ namespace TUrgot
         {
             if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() &&
                 Player.Distance(target) < Q.Range)
+            {
                 Q.Cast(target);
+                //Game.PrintChat("Cast Q");
+            }
         }
 
         private static void CastE(Obj_AI_Base target, string mode)
@@ -146,7 +152,9 @@ namespace TUrgot
             if (!E.IsReady() || !Menu.Item(mode + "E").GetValue<bool>())
                 return;
 
-            var hitchance = GetHitchance(Menu.Item(mode + "EChance").GetValue<int>());
+            var hitchance = GetHitchance(Menu.Item(mode + "EChance").GetValue<Slider>().Value);
+
+            //Game.PrintChat("Cast E");
 
             if (Player.ServerPosition.Distance(target.ServerPosition) < E.Range)
                 E.CastIfHitchanceEquals(target, hitchance);
