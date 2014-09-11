@@ -1,7 +1,11 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.IO;
 using LeagueSharp;
 using LeagueSharp.Common;
+
+#endregion
 
 namespace AutoLantern
 {
@@ -19,6 +23,9 @@ namespace AutoLantern
 
         private static void OnGameLoad(EventArgs args)
         {
+            if (ObjectManager.Player.ChampionName == "Thresh")
+                return;
+
             _menu = new Menu("AutoLantern", "AutoLantern", true);
             _menu.AddItem(new MenuItem("Auto", "Auto-Lantern at Low HP").SetValue(true));
             _menu.AddItem(new MenuItem("Low", "Low HP Percent").SetValue(new Slider(20, 30, 5)));
@@ -53,12 +60,12 @@ namespace AutoLantern
 
         private static bool IsLow()
         {
-            return _player.Health < _player.MaxHealth * _menu.Item("Low").GetValue<int>() / 100;
+            return _player.Health < _player.MaxHealth * _menu.Item("Low").GetValue<Slider>().Value / 100;
         }
 
         private static bool IsValid(GameObject lant)
         {
-            return lant != null && lant.IsValid && _player.ServerPosition.Distance(lant.Position) <= 300;
+            return lant != null && lant.IsValid && _player.ServerPosition.Distance(lant.Position) <= 500;
         }
 
         private static void InteractObject(GameObject obj)
