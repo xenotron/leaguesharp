@@ -2,10 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
+using Color = System.Drawing.Color;
 
 #endregion
 
@@ -15,7 +16,7 @@ namespace TUrgot
     {
         public const string ChampName = "Urgot";
         public static Orbwalking.Orbwalker Orbwalker;
-        public static readonly Obj_AI_Hero Player = ObjectManager.Player;
+        public static Obj_AI_Hero Player;
 
         public static List<Spell> SpellList = new List<Spell>();
         public static Spell Q, Q2, W, E;
@@ -29,8 +30,7 @@ namespace TUrgot
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            if (Player.BaseSkinName != ChampName) return;
-
+              if (Player.ChampionName != ChampName) return;
             Q = new Spell(SpellSlot.Q, 1000);
             Q2 = new Spell(SpellSlot.Q, 1200);
             W = new Spell(SpellSlot.W);
@@ -45,7 +45,7 @@ namespace TUrgot
             SpellList.Add(W);
             SpellList.Add(E);
 
-
+            Player = ObjectManager.Player;
             Ignite = Player.Spellbook.GetSpell(Player.GetSpellSlot("summonerdot"));
 
             Menu = new Menu("Trees " + ChampName, ChampName, true);
@@ -71,12 +71,22 @@ namespace TUrgot
             Menu.SubMenu("Harass")
                 .AddItem(new MenuItem("HarassActive", "Harass").SetValue(new KeyBind((byte)'C', KeyBindType.Press)));
 
+            Menu.AddSubMenu(new Menu("LaneClear", "LaneClear"));
+            Menu.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearQ", "Use Q").SetValue(true));
+            Menu.SubMenu("LaneClear")
+                .AddItem(new MenuItem("LaneClearQManaPercent", "Minimum Q Mana Percent").SetValue(new Slider(30, 0, 100)));
+            Menu.SubMenu("LaneClear")
+                .AddItem(new MenuItem("LaneClearActive", "LaneClear").SetValue(new KeyBind((byte)'V', KeyBindType.Press)));
+
             Menu.AddSubMenu(new Menu("Drawings", "Drawings"));
             Menu.SubMenu("Drawings")
                 .AddItem(new MenuItem("QRange", "Q").SetValue(new Circle(false, Color.Red)));
             Menu.SubMenu("Drawings")
                 .AddItem(new MenuItem("ERange", "E").SetValue(new Circle(false, Color.Blue)));
-
+            //Menu.SubMenu("Drawings")
+            //    .AddItem(new MenuItem("QTarget", "Draw Smart Q Target").SetValue(true));
+            //Menu.SubMenu("Drawings")
+            //    .AddItem(new MenuItem("BubbleThickness", "Bubble Thickness").SetValue(new Slider(15, 10, 25)));
             Menu.AddItem((new MenuItem("AutoQ", "Smart Q").SetValue(true)));
             Menu.AddToMainMenu();
 
@@ -84,10 +94,30 @@ namespace TUrgot
             Game.OnGameUpdate += Game_OnGameUpdate;
 
             Game.PrintChat("Trees" + ChampName + " loaded!");
+            /*    try
+            {
+
+
+                var bubble = new Bubble(Player, Color.Red, 200, Menu.Item("BubbleThickness").GetValue<Slider>().Value);
+            }
+            catch (Exception e)
+            {
+                Game.PrintChat(e.ToString());
+            }
+            */
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            if (Player.IsDead)
+                return;
+
+            if (Menu.Item("LaneClearActive").GetValue<KeyBind>().Active)
+            {
+                LaneClear();
+                return;
+            }
+
             CastLogic();
         }
 
@@ -98,8 +128,55 @@ namespace TUrgot
 
             if (DrawQ.Active) Utility.DrawCircle(Player.Position, Q.Range, DrawQ.Color);
             if (DrawE.Active) Utility.DrawCircle(Player.Position, E.Range, DrawE.Color);
-            //var pos = Drawing.WorldToScreen(Game.CursorPos);
-            // Drawing.DrawText(pos.X, pos.Y + 50, Color.Red, Math.Round(pos.X).ToString() + " , " + Math.Round(pos.Y).ToString());
+
+            //if (!Menu.Item("QTarget").GetValue<bool>())
+                return;
+
+         /*
+            foreach (
+                var hero in
+                    ObjectManager.Get<Obj_AI_Hero>()
+                        .Where(
+                            hero =>
+                                hero.IsValid && hero.IsVisible && !hero.IsDead && hero.HasBuff("UrgotPlasmaGrenadeBoom"))
+                )
+            {
+                BubbleMark(hero.Position, Color.Red, 200, Menu.Item("BubbleThickness").GetValue<Slider>().Value);
+            }
+          */
+         }
+
+
+       /* private static void BubbleMark(Vector3 position, Color color, float radius = 125, float thickness = 25)
+        {
+            var rSquared = radius * radius;
+            var Position = position;
+
+            for (var i = 1; i < thickness; i++)
+            {
+                var ycircle = (i * (radius / thickness * 2) - radius);
+                var r = Math.Sqrt(rSquared - ycircle * ycircle);
+                ycircle /= 1.3f;
+
+                Drawing.DrawCircle(new Vector3(Position.X, Position.Y, Position.Z + 100 + ycircle), (float)r, color);
+            }
+        }*/
+
+        private static void LaneClear()
+        {
+            if (!Q.IsReady() || !Player.CanCast)
+                return;
+            foreach (
+                var minion in
+                    ObjectManager.Get<Obj_AI_Minion>()
+                        .Where(
+                            minion =>
+                                minion.IsValid && minion.IsVisible && !minion.IsDead &&
+                                minion.IsValidTarget(Q.Range, true, Player.ServerPosition) &&
+                                DamageLib.IsKillable(minion, new[] { DamageLib.SpellType.Q })))
+            {
+                CastQ(minion, "LaneClear");
+            }
         }
 
         private static void CastLogic()
