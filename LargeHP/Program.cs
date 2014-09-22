@@ -65,7 +65,7 @@ namespace LargeHP
         {
             return
                 ObjectManager.Get<Obj_AI_Base>()
-                    .First(unit => unit.IsValid && unit.IsVisible && !unit.IsDead && (unit.Name.Contains(name)));
+                    .First(unit => unit.IsValid && unit.IsVisible && !unit.IsDead && (unit.Name.ToLower().Contains(name.ToLower())));
         }
     }
 }
