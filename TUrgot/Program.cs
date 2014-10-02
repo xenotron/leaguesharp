@@ -122,11 +122,12 @@ namespace TUrgot
                 return;
             }
 
-            if (Menu.Item("LaneClearActive").GetValue<KeyBind>().Active)
+            /*if (Menu.Item("LaneClearActive").GetValue<KeyBind>().Active)
             {
                 LaneClear();
                 return;
             }
+             */
 
             CastLogic();
         }
@@ -171,7 +172,7 @@ namespace TUrgot
             }
         }
 
-        private static void LaneClear()
+      /*  private static void LaneClear()
         {
             if (!Q.IsReady() || !Player.CanCast)
             {
@@ -187,6 +188,7 @@ namespace TUrgot
 
             CastQ(unit, "LaneClear");
         }
+       */
 
         private static void CastLogic()
         {
@@ -276,9 +278,8 @@ namespace TUrgot
                         obj =>
                             obj.IsValid && obj.IsEnemy && obj.IsValidTarget(600, true, Player.ServerPosition) &&
                             obj.Health < dmg);
-            
-                Player.SummonerSpellbook.CastSpell(Ignite.Slot, unit);
-            
+
+            Player.SummonerSpellbook.CastSpell(Ignite.Slot, unit);
         }
 
 
