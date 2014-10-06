@@ -24,7 +24,7 @@ namespace DisconnectAlerter
                 Game.PrintChat(
                     "<b><font color=\"#FF0000\">" +
                     Packet.S2C.PlayerDisconnect.Decoded(args.PacketData).Player.ChampionName +
-                    "</font></b><font color=\"#FFFFFF\"> has disconnected!</font></b>");
+                    "</font></b><font color=\"#FFFFFF\"> has disconnected!</font>");
             }
         }
     }
