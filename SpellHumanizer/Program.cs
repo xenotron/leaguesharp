@@ -22,7 +22,7 @@ namespace SpellHumanizer
 
         private static void Game_OnGameSendPacket(GamePacketEventArgs args)
         {
-            if (args.PacketData[0] != Packet.C2S.Cast.Header)
+            if (args.PacketData[0] != Packet.C2S.Cast.Header || IsSummonerSpell(args.PacketData[5]))
             {
                 return;
             }
@@ -35,6 +35,11 @@ namespace SpellHumanizer
             {
                 args.Process = false;
             }
+        }
+
+        private static bool IsSummonerSpell(byte spellByte)
+        {
+            return spellByte == 0xE9 || spellByte == 0xEF || spellByte == 0x8B || spellByte == 0xED || spellByte == 0x63;
         }
     }
 }
