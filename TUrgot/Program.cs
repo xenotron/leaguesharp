@@ -30,7 +30,9 @@ namespace TUrgot
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            if (Player.ChampionName != ChampName)
+            Player = ObjectManager.Player;
+
+            if (Player.BaseSkinName != ChampName)
             {
                 return;
             }
@@ -49,7 +51,6 @@ namespace TUrgot
             SpellList.Add(W);
             SpellList.Add(E);
 
-            Player = ObjectManager.Player;
             Ignite = Player.Spellbook.GetSpell(Player.GetSpellSlot("summonerdot"));
 
             Menu = new Menu("Trees " + ChampName, ChampName, true);
@@ -172,7 +173,7 @@ namespace TUrgot
             }
         }
 
-      /*  private static void LaneClear()
+        /*  private static void LaneClear()
         {
             if (!Q.IsReady() || !Player.CanCast)
             {
