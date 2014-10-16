@@ -10,6 +10,8 @@ namespace SpellHumanizer
 {
     internal class Program
     {
+        public static Obj_AI_Hero Player;
+
         private static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
@@ -17,21 +19,23 @@ namespace SpellHumanizer
 
         private static void Game_OnGameLoad(EventArgs args)
         {
+            Player = ObjectManager.Player;
             Game.OnGameSendPacket += Game_OnGameSendPacket;
         }
 
         private static void Game_OnGameSendPacket(GamePacketEventArgs args)
         {
-            if (args.PacketData[0] != Packet.C2S.Cast.Header || IsSummonerSpell(args.PacketData[5]))
+            if (args.PacketData[0] != Packet.C2S.Cast.Header)
             {
                 return;
             }
 
-            var spellState = ObjectManager.Player.Spellbook.CanUseSpell((SpellSlot) args.PacketData[6]);
+            var slot = (SpellSlot) args.PacketData[6];
+            var state = IsSummonerSpell(args.PacketData[5])
+                ? Player.SummonerSpellbook.CanUseSpell(slot)
+                : Player.Spellbook.CanUseSpell(slot);
 
-            if (ObjectManager.Player.IsDead || spellState == SpellState.Cooldown || spellState == SpellState.NoMana ||
-                spellState == SpellState.NotLearned || spellState == SpellState.Surpressed ||
-                spellState == SpellState.Unknown)
+            if (Player.IsDead || state != SpellState.Ready)
             {
                 args.Process = false;
             }
