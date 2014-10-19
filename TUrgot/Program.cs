@@ -23,6 +23,8 @@ namespace TUrgot
         public static SpellDataInst Ignite;
         public static Menu Menu;
 
+        public static readonly StringList HitchanceList = new StringList(new[] { "Low", "Medium", "High", "Very High" });
+
         private static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
@@ -65,14 +67,14 @@ namespace TUrgot
             Menu.AddSubMenu(new Menu("Combo", "Combo"));
             Menu.SubMenu("Combo").AddItem(new MenuItem("ComboQ", "Use Q").SetValue(true));
             Menu.SubMenu("Combo").AddItem(new MenuItem("ComboE", "Use E").SetValue(true));
-            Menu.SubMenu("Combo").AddItem(new MenuItem("ComboEChance", "E HitChance").SetValue(new Slider(1, 1, 3)));
+            Menu.SubMenu("Combo").AddItem(new MenuItem("ComboEChance", "E HitChance").SetValue(HitchanceList));
             Menu.SubMenu("Combo")
                 .AddItem(new MenuItem("ComboActive", "Combo").SetValue(new KeyBind(32, KeyBindType.Press)));
 
             Menu.AddSubMenu(new Menu("Harass", "Harass"));
             Menu.SubMenu("Harass").AddItem(new MenuItem("HarassQ", "Use Q").SetValue(true));
             Menu.SubMenu("Harass").AddItem(new MenuItem("HarassE", "Use E").SetValue(true));
-            Menu.SubMenu("Harass").AddItem(new MenuItem("HarassEChance", "E HitChance").SetValue(new Slider(2, 1, 3)));
+            Menu.SubMenu("Harass").AddItem(new MenuItem("HarassEChance", "E HitChance").SetValue(HitchanceList));
             Menu.SubMenu("Harass")
                 .AddItem(new MenuItem("HarassActive", "Harass").SetValue(new KeyBind((byte) 'C', KeyBindType.Press)));
 
@@ -123,12 +125,12 @@ namespace TUrgot
                 return;
             }
 
-            /*if (Menu.Item("LaneClearActive").GetValue<KeyBind>().Active)
+            if (Menu.Item("LaneClearActive").GetValue<KeyBind>().Active)
             {
                 LaneClear();
                 return;
             }
-             */
+
 
             CastLogic();
         }
@@ -173,9 +175,9 @@ namespace TUrgot
             }
         }
 
-        /*  private static void LaneClear()
+        private static void LaneClear()
         {
-            if (!Q.IsReady() || !Player.CanCast)
+            if (!Q.IsReady())
             {
                 return;
             }
@@ -185,11 +187,11 @@ namespace TUrgot
                         minion =>
                             minion.IsValid && minion.IsVisible && !minion.IsDead &&
                             minion.IsValidTarget(Q.Range, true, Player.ServerPosition) &&
-                            DamageLib.IsKillable(minion, new[] { DamageLib.SpellType.Q }));
+                            minion.Health < Player.GetDamageSpell(minion, SpellSlot.Q).CalculatedDamage);
 
             CastQ(unit, "LaneClear");
         }
-       */
+
 
         private static void CastLogic()
         {
@@ -221,9 +223,9 @@ namespace TUrgot
                 ObjectManager.Get<GameObject>()
                     .Where(
                         obj =>
-                            obj is Obj_AI_Hero && obj.IsValid && obj.IsEnemy &&
-                            ((Obj_AI_Hero) obj).HasBuff("UrgotPlasmaGrenadeBoom") &&
-                            ((Obj_AI_Hero) obj).IsValidTarget(Q2.Range, true, Player.ServerPosition)))
+                            obj is Obj_AI_Hero &&
+                            ((Obj_AI_Base) obj).IsValidTarget(Q2.Range, true, Player.ServerPosition) &&
+                            ((Obj_AI_Base) obj).HasBuff("UrgotPlasmaGrenadeBoom")))
             {
                 W.Cast();
                 Q2.Cast(obj.Position);
@@ -233,10 +235,9 @@ namespace TUrgot
 
         private static void CastQ(Obj_AI_Base target, string mode)
         {
-            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() && Player.Distance(target) < Q.Range)
+            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() && target.IsValidTarget(Q.Range))
             {
                 Q.Cast(target);
-                //Game.PrintChat("Cast Q");
             }
         }
 
@@ -247,11 +248,9 @@ namespace TUrgot
                 return;
             }
 
-            var hitchance = GetHitchance(Menu.Item(mode + "EChance").GetValue<Slider>().Value);
+            var hitchance = (HitChance) (Menu.Item(mode + "EChance").GetValue<StringList>().SelectedIndex + 3);
 
-            //Game.PrintChat("Cast E");
-
-            if (Player.ServerPosition.Distance(target.ServerPosition) < E.Range)
+            if (target.IsValidTarget(E.Range))
             {
                 E.CastIfHitchanceEquals(target, hitchance);
             }
@@ -263,7 +262,7 @@ namespace TUrgot
 
         private static void KSLogic()
         {
-            if (Ignite != null && Ignite.Slot != SpellSlot.Unknown && Ignite.State == SpellState.Ready && Player.CanCast)
+            if (Ignite != null && Ignite.Slot != SpellSlot.Unknown && Ignite.State == SpellState.Ready)
             {
                 KSIgnite();
             }
@@ -272,30 +271,15 @@ namespace TUrgot
 
         private static void KSIgnite()
         {
-            var dmg = 50 + 20 * Player.Level;
             var unit =
                 ObjectManager.Get<Obj_AI_Hero>()
                     .First(
                         obj =>
                             obj.IsValid && obj.IsEnemy && obj.IsValidTarget(600, true, Player.ServerPosition) &&
-                            obj.Health < dmg);
-
-            Player.SummonerSpellbook.CastSpell(Ignite.Slot, unit);
-        }
-
-
-        private static HitChance GetHitchance(int num)
-        {
-            switch (num)
+                            obj.Health < Player.GetSummonerSpellDamage(obj, Damage.SummonerSpell.Ignite));
+            if (unit != null)
             {
-                case 1:
-                    return HitChance.Low;
-                case 2:
-                    return HitChance.Medium;
-                case 3:
-                    return HitChance.High;
-                default:
-                    return HitChance.High;
+                Player.SummonerSpellbook.CastSpell(Ignite.Slot, unit);
             }
         }
     }
