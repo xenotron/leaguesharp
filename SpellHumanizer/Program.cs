@@ -22,6 +22,8 @@ namespace SpellHumanizer
             Menu = new Menu("SpellHumanizer", "SpellHumanizer", true);
             Menu.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
             Menu.AddItem(new MenuItem("Debug", "Debug").SetValue(false));
+            Menu.AddToMainMenu();
+
             Game.OnGameUpdate += Game_OnGameUpdate;
         }
 
