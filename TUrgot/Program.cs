@@ -228,7 +228,9 @@ namespace TUrgot
                             ((Obj_AI_Base) obj).HasBuff("UrgotPlasmaGrenadeBoom")))
             {
                 W.Cast();
-                Q2.Cast(obj.Position);
+                var str = new Packet.C2S.Cast.Struct(0, SpellSlot.Q, Player.NetworkId, Player.Position.X,
+                    Player.Position.Y, obj.Position.X, obj.Position.Y);
+                Packet.C2S.Cast.Encoded(str).Send();
                 //Game.PrintChat("Cast Q2");
             }
         }
