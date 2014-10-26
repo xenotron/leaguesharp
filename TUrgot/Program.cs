@@ -163,7 +163,7 @@ namespace TUrgot
 
         private static void BubbleMark(Vector3 position, Color color, float radius = 125, float thickness = 25)
         {
-            var rSquared = radius * radius;
+           /* var rSquared = radius * radius;
 
             for (var i = 1; i < thickness; i++)
             {
@@ -173,6 +173,7 @@ namespace TUrgot
 
                 Drawing.DrawCircle(new Vector3(position.X, position.Y, position.Z + 100 + ycircle), (float) r, color);
             }
+            */
         }
 
         private static void LaneClear()
