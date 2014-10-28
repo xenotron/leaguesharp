@@ -24,7 +24,16 @@ namespace SpellHumanizer
             Menu.AddItem(new MenuItem("Debug", "Debug").SetValue(false));
             Menu.AddToMainMenu();
 
+            Game.OnGameSendPacket += Game_OnGameSendPacket;
             Game.OnGameUpdate += Game_OnGameUpdate;
+        }
+
+        private static void Game_OnGameSendPacket(GamePacketEventArgs args)
+        {
+            if (args.PacketData[0] == 0x81)
+            {
+                args.Process = false;
+            }
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
