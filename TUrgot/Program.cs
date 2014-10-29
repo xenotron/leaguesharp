@@ -2,11 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
-using SharpDX;
-using Color = System.Drawing.Color;
 
 #endregion
 
@@ -114,7 +113,7 @@ namespace TUrgot
                 return;
             }
 
-            if (Menu.Item("LaneClearActive").GetValue<KeyBind>().Active)
+            if (Menu.Item("LaneClearActive").GetValue<KeyBind>().Active && !IsManaLow())
             {
                 LaneClear();
                 return;
@@ -140,14 +139,17 @@ namespace TUrgot
             {
                 return;
             }
+
             var unit =
                 ObjectManager.Get<Obj_AI_Minion>()
                     .First(
                         minion =>
-                            minion.IsValidTarget(Q.Range) &&
+                            minion.IsValidTarget(minion.HasBuff("urgotcorrosivedebuff", true) ? Q2.Range : Q.Range) &&
                             minion.Health < Player.GetDamageSpell(minion, SpellSlot.Q).CalculatedDamage);
-
-            CastQ(unit, "LaneClear");
+            if (unit != null)
+            {
+                CastQ(unit, "LaneClear");
+            }
         }
 
 
@@ -182,13 +184,13 @@ namespace TUrgot
                     .Where(obj => obj.IsValidTarget(Q2.Range) && obj.HasBuff("urgotcorrosivedebuff", true)))
             {
                 W.Cast();
-                Q.Cast(obj.ServerPosition);
+                Q2.Cast(obj.ServerPosition);
             }
         }
 
         private static void CastQ(Obj_AI_Base target, string mode)
         {
-            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() && target.IsValidTarget(Q.Range))
+            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() && target.IsValidTarget(target.HasBuff("urgotcorrosivedebuff", true) ? Q2.Range : Q.Range))
             {
                 Q.Cast(target);
             }
@@ -234,6 +236,11 @@ namespace TUrgot
             {
                 Player.SummonerSpellbook.CastSpell(Ignite.Slot, unit);
             }
+        }
+
+        private static bool IsManaLow()
+        {
+            return Player.Mana < Player.MaxMana * Menu.Item("LaneClearQManaPercent").GetValue<Slider>().Value / 100;
         }
     }
 }
