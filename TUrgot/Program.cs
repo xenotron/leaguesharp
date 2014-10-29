@@ -105,17 +105,6 @@ namespace TUrgot
             Game.OnGameUpdate += Game_OnGameUpdate;
 
             Game.PrintChat("Trees" + ChampName + " loaded!");
-            /*    try
-            {
-
-
-                var bubble = new Bubble(Player, Color.Red, 200, Menu.Item("BubbleThickness").GetValue<Slider>().Value);
-            }
-            catch (Exception e)
-            {
-                Game.PrintChat(e.ToString());
-            }
-            */
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
@@ -143,37 +132,6 @@ namespace TUrgot
             {
                 Utility.DrawCircle(Player.Position, circle.Radius, circle.Color);
             }
-
-
-            if (!Menu.Item("QTarget").GetValue<bool>())
-            {
-                return;
-            }
-
-            foreach (var hero in
-                ObjectManager.Get<Obj_AI_Hero>()
-                    .Where(
-                        hero => hero.IsValid && hero.IsVisible && !hero.IsDead && hero.HasBuff("UrgotPlasmaGrenadeBoom"))
-                )
-            {
-                BubbleMark(hero.Position, Color.Red, 200, Menu.Item("BubbleThickness").GetValue<Slider>().Value);
-            }
-        }
-
-
-        private static void BubbleMark(Vector3 position, Color color, float radius = 125, float thickness = 25)
-        {
-           /* var rSquared = radius * radius;
-
-            for (var i = 1; i < thickness; i++)
-            {
-                var ycircle = (i * (radius / thickness * 2) - radius);
-                var r = Math.Sqrt(rSquared - ycircle * ycircle);
-                ycircle /= 1.3f;
-
-                Drawing.DrawCircle(new Vector3(position.X, position.Y, position.Z + 100 + ycircle), (float) r, color);
-            }
-            */
         }
 
         private static void LaneClear()
@@ -186,8 +144,7 @@ namespace TUrgot
                 ObjectManager.Get<Obj_AI_Minion>()
                     .First(
                         minion =>
-                            minion.IsValid && minion.IsVisible && !minion.IsDead &&
-                            minion.IsValidTarget(Q.Range, true, Player.ServerPosition) &&
+                            minion.IsValidTarget(Q.Range) &&
                             minion.Health < Player.GetDamageSpell(minion, SpellSlot.Q).CalculatedDamage);
 
             CastQ(unit, "LaneClear");
@@ -221,18 +178,11 @@ namespace TUrgot
             }
 
             foreach (var obj in
-                ObjectManager.Get<GameObject>()
-                    .Where(
-                        obj =>
-                            obj is Obj_AI_Hero &&
-                            ((Obj_AI_Base) obj).IsValidTarget(Q2.Range, true, Player.ServerPosition) &&
-                            ((Obj_AI_Base) obj).HasBuff("UrgotPlasmaGrenadeBoom")))
+                ObjectManager.Get<Obj_AI_Hero>()
+                    .Where(obj => obj.IsValidTarget(Q2.Range) && obj.HasBuff("urgotcorrosivedebuff", true)))
             {
                 W.Cast();
-                var str = new Packet.C2S.Cast.Struct(0, SpellSlot.Q, Player.NetworkId, Player.Position.X,
-                    Player.Position.Y, obj.Position.X, obj.Position.Y);
-                Packet.C2S.Cast.Encoded(str).Send();
-                //Game.PrintChat("Cast Q2");
+                Q.Cast(obj.ServerPosition);
             }
         }
 
@@ -278,7 +228,7 @@ namespace TUrgot
                 ObjectManager.Get<Obj_AI_Hero>()
                     .First(
                         obj =>
-                            obj.IsValid && obj.IsEnemy && obj.IsValidTarget(600, true, Player.ServerPosition) &&
+                            obj.IsValidTarget(600) &&
                             obj.Health < Player.GetSummonerSpellDamage(obj, Damage.SummonerSpell.Ignite));
             if (unit != null)
             {
