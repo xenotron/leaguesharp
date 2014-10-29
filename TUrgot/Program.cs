@@ -192,7 +192,7 @@ namespace TUrgot
         {
             if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() && target.IsValidTarget(target.HasBuff("urgotcorrosivedebuff", true) ? Q2.Range : Q.Range))
             {
-                Q.Cast(target);
+                Q.Cast(target.ServerPosition);
             }
         }
 
