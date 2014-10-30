@@ -155,7 +155,6 @@ namespace TUrgot
 
         private static void CastLogic()
         {
-            KSLogic();
             SmartQ();
 
             var target = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Physical);
@@ -190,7 +189,8 @@ namespace TUrgot
 
         private static void CastQ(Obj_AI_Base target, string mode)
         {
-            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() && target.IsValidTarget(target.HasBuff("urgotcorrosivedebuff", true) ? Q2.Range : Q.Range))
+            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() &&
+                target.IsValidTarget(target.HasBuff("urgotcorrosivedebuff", true) ? Q2.Range : Q.Range))
             {
                 Q.Cast(target.ServerPosition);
             }
@@ -212,29 +212,6 @@ namespace TUrgot
             else
             {
                 E.CastIfHitchanceEquals(SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical), HitChance.High);
-            }
-        }
-
-        private static void KSLogic()
-        {
-            if (Ignite != null && Ignite.Slot != SpellSlot.Unknown && Ignite.State == SpellState.Ready)
-            {
-                KSIgnite();
-            }
-        }
-
-
-        private static void KSIgnite()
-        {
-            var unit =
-                ObjectManager.Get<Obj_AI_Hero>()
-                    .First(
-                        obj =>
-                            obj.IsValidTarget(600) &&
-                            obj.Health < Player.GetSummonerSpellDamage(obj, Damage.SummonerSpell.Ignite));
-            if (unit != null)
-            {
-                Player.SummonerSpellbook.CastSpell(Ignite.Slot, unit);
             }
         }
 
