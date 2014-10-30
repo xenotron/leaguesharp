@@ -11,6 +11,7 @@ namespace SpellHumanizer
     internal class Program
     {
         public static Menu Menu;
+        public static float LastSent = 0;
 
         public static void Main(string[] args)
         {
@@ -22,6 +23,7 @@ namespace SpellHumanizer
             Menu = new Menu("SpellHumanizer", "SpellHumanizer", true);
             Menu.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
             Menu.AddItem(new MenuItem("Debug", "Debug").SetValue(false));
+            Menu.AddItem(new MenuItem("CameraPacket", "Delay Send Camera Packet").SetValue(true));
             Menu.AddToMainMenu();
 
             Game.OnGameSendPacket += Game_OnGameSendPacket;
@@ -30,10 +32,13 @@ namespace SpellHumanizer
 
         private static void Game_OnGameSendPacket(GamePacketEventArgs args)
         {
-            if (args.PacketData[0] == 0x81)
+            if (Menu.Item("CameraPacket").GetValue<bool>() && args.PacketData[0] == 0x81 &&
+                (Environment.TickCount - LastSent) < 100)
             {
                 args.Process = false;
             }
+
+            LastSent = Environment.TickCount;
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
