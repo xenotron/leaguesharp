@@ -39,20 +39,21 @@ namespace TUrgot
             }
 
             Q = new Spell(SpellSlot.Q, 1000);
-            Q2 = new Spell(SpellSlot.Q, 1200);
             W = new Spell(SpellSlot.W);
-            E = new Spell(SpellSlot.E, 900);
+            E = new Spell(SpellSlot.E, 1500);
 
-            Q.SetSkillshot(0.10f, 100f, 1600f, true, SkillshotType.SkillshotLine);
-            Q2.SetSkillshot(0.10f, 100f, 1600f, false, SkillshotType.SkillshotLine);
-            E.SetSkillshot(0.283f, 0f, 1750f, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(0.10f, 60f, 1200f, true, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.2658f, 120f, 1500f, false, SkillshotType.SkillshotCircle);
+
+            Q2 = new Spell(SpellSlot.Q, 1200) { MinHitChance = HitChance.Collision };
+            Q2.SetSkillshot(0.10f, 60f, 1600f, false, SkillshotType.SkillshotLine);
 
             SpellList.Add(Q);
             SpellList.Add(Q2);
             SpellList.Add(W);
             SpellList.Add(E);
 
-            Ignite = Player.Spellbook.GetSpell(Player.GetSpellSlot("summonerdot"));
+            //Ignite = Player.Spellbook.GetSpell(Player.GetSpellSlot("summonerdot"));
 
             Menu = new Menu("Trees " + ChampName, ChampName, true);
 
