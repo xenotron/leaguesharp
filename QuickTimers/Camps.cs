@@ -74,7 +74,7 @@ namespace QuickTimers
         {
             if (State != CampState.Dead) return;
 
-            RenderText.text = Utility.FormatTime(Math.Abs(Environment.TickCount - RespawnTime) / 1000f);
+            RenderText.text = Utils.FormatTime(Math.Abs(Environment.TickCount - RespawnTime) / 1000f);
             PrintFloat();
         }
 
