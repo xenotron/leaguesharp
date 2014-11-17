@@ -10,6 +10,8 @@ namespace AutoLevelSpells
 {
     internal class Program
     {
+        public static Menu Menu;
+
         private static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
@@ -17,7 +19,19 @@ namespace AutoLevelSpells
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            var level = new AutoLevel(GetSequence());
+            Menu = new Menu("AutoLevelSpells", "AutoLevelSpells", true);
+            Menu.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
+            Menu.Item("Enabled").ValueChanged += Enabled_ValueChanged;
+
+            if (Menu.Item("Enabled").GetValue<bool>())
+            {
+                var level = new AutoLevel(GetSequence());
+            }
+        }
+
+        private static void Enabled_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            AutoLevel.Enabled(e.GetNewValue<bool>());
         }
 
         private static int[] GetSequence()
@@ -49,11 +63,17 @@ namespace AutoLevelSpells
                 case "Ashe":
                     sequence = new[] { 2, 3, 2, 1, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
                     break;
+                case "Azir":
+                    sequence = new[] { 2, 1, 3, 1, 1, 4, 1, 2, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
+                    break;
                 case "Blitzcrank":
                     sequence = new[] { 1, 3, 2, 3, 2, 4, 3, 2, 3, 2, 4, 3, 2, 1, 1, 4, 1, 1 };
                     break;
                 case "Brand":
                     sequence = new[] { 2, 3, 2, 1, 2, 4, 2, 3, 2, 3, 4, 3, 3, 1, 1, 4, 1, 1 };
+                    break;
+                case "Braum":
+                    sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
                 case "Caitlyn":
                     sequence = new[] { 2, 1, 1, 3, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
@@ -105,6 +125,9 @@ namespace AutoLevelSpells
                     break;
                 case "Garen":
                     sequence = new[] { 1, 2, 3, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+                    break;
+                case "Gnar":
+                    sequence = new[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Gragas":
                     sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 3, 2, 3, 4, 3, 3 };
@@ -334,6 +357,9 @@ namespace AutoLevelSpells
                 case "Veigar":
                     sequence = new[] { 1, 3, 1, 2, 1, 4, 2, 2, 2, 2, 4, 3, 1, 1, 3, 4, 3, 3 };
                     break;
+                case "VelKoz":
+                    sequence = new[] { 1, 2, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
+                    break;
                 case "Vi":
                     sequence = new[] { 3, 1, 2, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
                     break;
@@ -355,6 +381,9 @@ namespace AutoLevelSpells
                 case "XinZhao":
                     sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
+                case "Yasuo":
+                    sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
+                    break;
                 case "Yorick":
                     sequence = new[] { 2, 3, 1, 3, 3, 4, 3, 2, 3, 1, 4, 2, 1, 2, 1, 4, 2, 1 };
                     break;
@@ -372,9 +401,6 @@ namespace AutoLevelSpells
                     break;
                 case "Zyra":
                     sequence = new[] { 3, 2, 1, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
-                    break;
-                case "Yasuo":
-                    sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
             }
             return sequence;
