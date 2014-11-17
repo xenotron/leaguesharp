@@ -352,7 +352,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Vayne":
-                    sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
+                    sequence = new[] { 1, 3, 2, 2, 2, 4, 2, 1, 2, 1, 4, 3, 1, 3, 3, 4, 3, 3 };
                     break;
                 case "Veigar":
                     sequence = new[] { 1, 3, 1, 2, 1, 4, 2, 2, 2, 2, 4, 3, 1, 1, 3, 4, 3, 3 };
@@ -361,7 +361,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 2, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
                     break;
                 case "Vi":
-                    sequence = new[] { 3, 1, 2, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+                    sequence = new[] { 2, 3, 1, 1, 1, 4, 1, 2, 1, 1, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Viktor":
                     sequence = new[] { 3, 2, 3, 1, 3, 4, 3, 1, 3, 1, 4, 1, 2, 1, 2, 4, 2, 2 };
