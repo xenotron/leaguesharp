@@ -22,6 +22,7 @@ namespace AutoLevelSpells
             Menu = new Menu("AutoLevelSpells", "AutoLevelSpells", true);
             Menu.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
             Menu.Item("Enabled").ValueChanged += Enabled_ValueChanged;
+            Menu.AddToMainMenu();
 
             if (Menu.Item("Enabled").GetValue<bool>())
             {
@@ -85,7 +86,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 3, 2, 2, 2, 4, 2, 3, 2, 3, 4, 3, 3, 1, 1, 4, 1, 1 };
                     break;
                 case "Corki":
-                    sequence = new[] { 1, 2, 1, 3, 1, 4, 1, 3, 1, 3, 4, 3, 2, 3, 2, 4, 2, 2 };
+                    sequence = new[] { 1, 2, 3, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
                 case "Darius":
                     sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 2, 1, 2, 4, 2, 3, 2, 3, 4, 3, 3 };
@@ -106,7 +107,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
                 case "Ezreal":
-                    sequence = new[] { 1, 3, 2, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
+                    sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
                 case "FiddleSticks":
                     sequence = new[] { 3, 2, 2, 1, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
@@ -133,7 +134,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 3, 2, 3, 4, 3, 3 };
                     break;
                 case "Graves":
-                    sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 2, 1, 3, 4, 3, 3, 3, 2, 4, 2, 2 };
+                    sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
                 case "Hecarim":
                     sequence = new[] { 1, 2, 1, 3, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
@@ -157,7 +158,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
                 case "Jinx":
-                    sequence = new[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
+                    sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Karma":
                     sequence = new[] { 1, 3, 1, 2, 3, 1, 3, 1, 3, 1, 3, 1, 3, 2, 2, 2, 2, 2 };
@@ -298,7 +299,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 3, 3, 2, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
                     break;
                 case "Sivir":
-                    sequence = new[] { 1, 3, 1, 2, 1, 4, 1, 2, 1, 2, 4, 2, 3, 2, 3, 4, 3, 3 };
+                    sequence = new[] { 2, 1, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Skarner":
                     sequence = new[] { 1, 2, 1, 2, 1, 4, 1, 2, 1, 2, 4, 2, 3, 3, 3, 4, 3, 3 };
@@ -340,7 +341,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 2, 1, 1, 3, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Twitch":
-                    sequence = new[] { 1, 3, 3, 2, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 1, 2, 2 };
+                    sequence = new[] { 3, 2, 1, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
                     break;
                 case "Udyr":
                     sequence = new[] { 4, 2, 3, 4, 4, 2, 4, 2, 4, 2, 2, 1, 3, 3, 3, 3, 1, 1 };
@@ -352,7 +353,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Vayne":
-                    sequence = new[] { 1, 3, 2, 2, 2, 4, 2, 1, 2, 1, 4, 3, 1, 3, 3, 4, 3, 3 };
+                    sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
                 case "Veigar":
                     sequence = new[] { 1, 3, 1, 2, 1, 4, 2, 2, 2, 2, 4, 3, 1, 1, 3, 4, 3, 3 };
