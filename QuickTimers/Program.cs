@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using LeagueSharp;
 using LeagueSharp.Common;
+using QuickTimers.Properties;
 using SharpDX;
 
 #endregion
@@ -35,7 +36,18 @@ namespace QuickTimers
                 camp.Value.Kill(0);
             }
 
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_DomainUnload;
             Game.OnGameProcessPacket += Game_OnGameProcessPacket;
+        }
+
+        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            HUD.Dispose();
+            foreach (var camp in Camps)
+            {
+                camp.Value.Sprite.Dispose();
+            }
         }
 
         private static void Game_OnGameProcessPacket(GamePacketEventArgs args)
@@ -47,25 +59,29 @@ namespace QuickTimers
             {
                 case 0xC3:
                     packet.Position = 5;
-                    var UnitNetworkId = packet.ReadInteger();
-                    var CampId = packet.ReadInteger();
-                    var EmptyType = packet.ReadByte();
-                    var BuffHash = packet.ReadInteger();
-                    var respawnTime = packet.ReadFloat();
+                    int UnitNetworkId = packet.ReadInteger();
+                    int CampId = packet.ReadInteger();
+                    byte EmptyType = packet.ReadByte();
+                    int BuffHash = packet.ReadInteger();
+                    float respawnTime = packet.ReadFloat();
 
                     camp = Camps[CampId];
                     if (camp != null)
+                    {
                         camp.Kill(respawnTime);
+                    }
 
                     break;
 
                 case 0xE9:
                     packet.Position = 21;
-                    var campId = packet.ReadByte();
+                    byte campId = packet.ReadByte();
 
                     camp = Camps[campId];
                     if (camp != null)
+                    {
                         camp.Spawn();
+                    }
 
                     break;
             }
@@ -75,7 +91,7 @@ namespace QuickTimers
         {
             _pos = GetScaledVector(_pos);
 
-            var loadHud = new Render.Sprite(Properties.Resources.HUD, _pos)
+            var loadHud = new Render.Sprite(Resources.HUD, _pos)
             {
                 Scale = _scale,
                 Color = new ColorBGRA(255f, 255f, 255f, 20f)

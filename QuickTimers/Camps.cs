@@ -9,8 +9,6 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
 
-using Color = SharpDX.Color;
-
 #endregion
 
 namespace QuickTimers
@@ -54,8 +52,6 @@ namespace QuickTimers
         public Render.Sprite Sprite;
         public CampState State = CampState.Unknown;
 
-        public int RespawnTime { get; set; }
-
         public Camp(int campId, string name, Vector2 position, int respawnTime)
         {
             _respawnDuration = respawnTime * 60 * 1000;
@@ -65,14 +61,22 @@ namespace QuickTimers
             RenderText = GetRenderText(position, _isMajor);
             RespawnTime = 0;
 
-            foreach (var obj in ObjectManager.Get<Obj_AI_Minion>().Where(obj => obj.CampNumber == campId))
+            foreach (Obj_AI_Minion obj in ObjectManager.Get<Obj_AI_Minion>().Where(obj => obj.CampNumber == campId))
+            {
                 CampObject = obj;
-            
+            }
+
             Game.OnGameUpdate += Game_OnGameUpdate;
         }
+
+        public int RespawnTime { get; set; }
+
         private void Game_OnGameUpdate(EventArgs args)
         {
-            if (State != CampState.Dead) return;
+            if (State != CampState.Dead)
+            {
+                return;
+            }
 
             RenderText.text = Utils.FormatTime(Math.Abs(Environment.TickCount - RespawnTime) / 1000f);
             PrintFloat();
@@ -128,8 +132,10 @@ namespace QuickTimers
         private void PrintFloat()
         {
             if (Environment.TickCount - LastPrint <= 1000 || Render.OnScreen(Drawing.WorldToScreen(CampObject.Position)))
+            {
                 return;
-            Utility.PrintFloatText(CampObject, RenderText.text, Packet.FloatTextPacket.Invulnerable);
+            }
+            CampObject.PrintFloatText(RenderText.text, Packet.FloatTextPacket.Invulnerable);
             LastPrint = Environment.TickCount;
         }
 
@@ -140,22 +146,22 @@ namespace QuickTimers
 
         private static Render.Text GetRenderText(Vector2 pos, bool isMajor)
         {
-            var offset = isMajor ? MajorCampTextOffset : MinorCampTextOffset;
-            var size = isMajor ? 48 : 42;
-            var text = new Render.Text("", (int)(pos.X + offset.X), (int)(pos.Y + offset.Y), size, Color.White);
+            Vector2 offset = isMajor ? MajorCampTextOffset : MinorCampTextOffset;
+            int size = isMajor ? 48 : 42;
+            var text = new Render.Text("", (int) (pos.X + offset.X), (int) (pos.Y + offset.Y), size, Color.White);
             text.Add(1);
             return text;
         }
 
         private static Stream GetBitmapStream(string name)
         {
-            var str = "QuickTimers.Resources." + name + ".png";
+            string str = "QuickTimers.Resources." + name + ".png";
             return Assembly.GetExecutingAssembly().GetManifestResourceStream(str);
         }
 
         private static Render.Sprite GetMapSprite(string name, Vector2 pos)
         {
-            var stream = GetBitmapStream(name);
+            Stream stream = GetBitmapStream(name);
             var sprite = new Render.Sprite(stream, pos) { Scale = _scale };
             sprite.OnReset += Sprite_OnReset;
             Crop(sprite, IsMajorCamp(name));
@@ -165,14 +171,14 @@ namespace QuickTimers
 
         private static void Sprite_OnReset(Render.Sprite sprite)
         {
-            var w = sprite.Width;
+            int w = sprite.Width;
             sprite.Scale = _scale;
             Crop(sprite, w == 85);
         }
 
         private static void Crop(Render.Sprite sprite, bool isMajor = false)
         {
-            var dimensions = isMajor ? MajorCampSpriteDimensions : MinorCampSpriteDimensions;
+            int[] dimensions = isMajor ? MajorCampSpriteDimensions : MinorCampSpriteDimensions;
             sprite.Crop(0, 0, dimensions[0], dimensions[1], true);
         }
 
