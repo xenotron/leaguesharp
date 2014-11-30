@@ -89,6 +89,10 @@ namespace ControlSharp
             {
                 CurrentMode = Orbwalking.OrbwalkingMode.Mixed;
             }
+            else if (b.Contains("DPadDown"))
+            {
+                CurrentMode = Orbwalking.OrbwalkingMode.LastHit;
+            }
             else if (!b.Contains("LeftThumb")) //Push any button to cancel mode
             {
                 CurrentMode = Orbwalking.OrbwalkingMode.None;
