@@ -1,6 +1,10 @@
-﻿using System;
+﻿#region
+
+using System;
 using SharpDX;
 using SharpDX.XInput;
+
+#endregion
 
 namespace ControlSharp
 {
@@ -44,8 +48,8 @@ namespace ControlSharp
             Controller.SetVibration(
                 new Vibration
                 {
-                    LeftMotorSpeed = (ushort) (MathHelper.Saturate(leftMotor) * ushort.MaxValue),
-                    RightMotorSpeed = (ushort) (MathHelper.Saturate(rightMotor) * ushort.MaxValue)
+                    LeftMotorSpeed = (ushort)(MathHelper.Saturate(leftMotor) * ushort.MaxValue),
+                    RightMotorSpeed = (ushort)(MathHelper.Saturate(rightMotor) * ushort.MaxValue)
                 });
         }
 
@@ -66,16 +70,14 @@ namespace ControlSharp
             }
 
             lastPacket = state.PacketNumber;
-
             var gamepadState = state.Gamepad;
 
             // Shoulders
             LeftShoulder = (gamepadState.Buttons & GamepadButtonFlags.LeftShoulder) != 0;
             RightShoulder = (gamepadState.Buttons & GamepadButtonFlags.RightShoulder) != 0;
-
             // Triggers
-            LeftTrigger = gamepadState.LeftTrigger / (float) byte.MaxValue;
-            RightTrigger = gamepadState.RightTrigger / (float) byte.MaxValue;
+            LeftTrigger = gamepadState.LeftTrigger / (float)byte.MaxValue;
+            RightTrigger = gamepadState.RightTrigger / (float)byte.MaxValue;
 
             // Buttons
             Start = (gamepadState.Buttons & GamepadButtonFlags.Start) != 0;
