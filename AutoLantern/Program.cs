@@ -42,7 +42,7 @@ namespace AutoLantern
 
         private static void OnGameUpdate(EventArgs args)
         {
-            if (IsValid(_threshLantern) && (IsLow() || (_menu.Item("Hotkey").GetValue<KeyBind>().Active)))
+            if (IsValid(_threshLantern) && ((IsLow() && _menu.Item("Auto").GetValue<bool>()) || (_menu.Item("Hotkey").GetValue<KeyBind>().Active)))
                 InteractObject(_threshLantern);
         }
 
