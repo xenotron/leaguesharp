@@ -149,10 +149,9 @@ namespace ControlSharp
                     break;
                 case "flash": //LOL
                     Controller.Update();
-                    var p = ObjectManager.Player.ServerPosition.To2D() + (Controller.LeftStick.Position / 75);
-                    p.Extend(ObjectManager.Player.Position.To2D(), 550);
-                    var pos = new Vector3(p.X, p.Y, ObjectManager.Player.Position.Z);
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot, pos);
+                    var pos = ObjectManager.Player.ServerPosition.To2D() + (Controller.LeftStick.Position / 75);
+                    pos.Extend(ObjectManager.Player.ServerPosition.To2D(), 550);
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot, pos.To3D());
                     break;
                 case "haste":
                     ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
