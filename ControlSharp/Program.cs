@@ -111,8 +111,62 @@ namespace ControlSharp
                 CurrentMode = Orbwalking.OrbwalkingMode.None;
             }
 
+            var S1 = ObjectManager.Player.SummonerSpellbook.GetSpell(SpellSlot.Summoner1);
+            var S2 = ObjectManager.Player.SummonerSpellbook.GetSpell(SpellSlot.Summoner2);
+
+            if (Controller.LeftTrigger > 0 && S1.State == SpellState.Ready)
+            {
+                SummonerCastLogic(S1);
+            }
+
+            if (Controller.RightTrigger > 0 && S2.State == SpellState.Ready)
+            {
+                SummonerCastLogic(S2);
+            }
+
             Text.text = "MODE: " + CurrentMode;
             OrbWalker.ActiveMode = CurrentMode;
+        }
+
+        private static void SummonerCastLogic(SpellDataInst spell)
+        {
+            switch (spell.Name.ToLower().Replace("summoner", ""))
+            {
+                case "barrier":
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    break;
+                case "boost":
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    break;
+                case "dot":
+                    foreach (
+                        var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(h => h.IsValidTarget(550) && h.Health < 600)
+                        )
+                    {
+                        ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot, enemy);
+                        break;
+                    }
+                    break;
+                case "flash": //LOL
+                    Controller.Update();
+                    var p = ObjectManager.Player.ServerPosition.To2D() + (Controller.LeftStick.Position / 75);
+                    p.Extend(ObjectManager.Player.Position.To2D(), 550);
+                    var pos = new Vector3(p.X, p.Y, ObjectManager.Player.Position.Z);
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot, pos);
+                    break;
+                case "haste":
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    break;
+                case "heal":
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    break;
+                case "mana":
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    break;
+                case "revive":
+                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    break;
+            }
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
