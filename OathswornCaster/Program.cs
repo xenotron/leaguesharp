@@ -57,7 +57,7 @@ namespace OathswornCaster
         private static void Game_OnGameUpdate(EventArgs args)
         {
             if (!Menu.Item("Enabled").GetValue<KeyBind>().Active ||
-                ObjectManager.Player.HealthPercentage() < Menu.Item("Health").GetValue<Slider>().Value)
+                ObjectManager.Player.HealthPercentage() > Menu.Item("Health").GetValue<Slider>().Value)
             {
                 return;
             }
