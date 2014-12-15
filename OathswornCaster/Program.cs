@@ -39,7 +39,7 @@ namespace OathswornCaster
             Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">Oathsworn Caster by </font><font color=\"#5C00A3\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
 
-            Game.OnGameProcessPacket += Game_OnGameProcessPacket;
+         //   Game.OnGameProcessPacket += Game_OnGameProcessPacket;
             Game.OnGameUpdate += Game_OnGameUpdate;
         }
 
