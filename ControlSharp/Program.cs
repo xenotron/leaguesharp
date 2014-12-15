@@ -58,7 +58,7 @@ namespace ControlSharp
                 Text.Add();
             }
 
-            Utility.DebugMessage(
+            Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">ControlSharp by </font><font color=\"#5C00A3\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
 
             Menu.Item("Draw").ValueChanged += OnValueChanged;

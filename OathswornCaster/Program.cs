@@ -36,7 +36,7 @@ namespace OathswornCaster
             Menu.AddItem(new MenuItem("BlockCamera", "Block Camera Packet").SetValue(true));
             Menu.AddToMainMenu();
 
-            Utility.DebugMessage(
+            Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">Oathsworn Caster by </font><font color=\"#5C00A3\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
 
             Game.OnGameProcessPacket += Game_OnGameProcessPacket;
