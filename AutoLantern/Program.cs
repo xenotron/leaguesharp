@@ -40,6 +40,7 @@ namespace AutoLantern
             GameObject.OnDelete += OnMinionDeletion;
 
             Game.PrintChat("AutoLantern by Trees loaded.");
+            Game.PrintChat("AutoLantern is currently not working as of 4.21");
             _player = ObjectManager.Player;
         }
 
@@ -92,7 +93,7 @@ namespace AutoLantern
                     binaryWriter.Write((byte) 0x3A);
                     binaryWriter.Write(_player.NetworkId);
                     binaryWriter.Write(obj.NetworkId);
-                    Game.SendPacket(memoryStream.ToArray(), PacketChannel.C2S, PacketProtocolFlags.NoFlags);
+                    //Game.SendPacket(memoryStream.ToArray(), PacketChannel.C2S, PacketProtocolFlags.NoFlags);
                 }
             }
         }
