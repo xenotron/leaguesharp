@@ -59,7 +59,7 @@ namespace LeBlanc
             W = new Spell(SpellSlot.W, 550);
             W.SetSkillshot(.5f, 100, 2000, false, SkillshotType.SkillshotCircle);
 
-            E = new Spell(SpellSlot.E, 990);
+            E = new Spell(SpellSlot.E, 970);
             E.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
 
             R = new Spell(SpellSlot.R);
@@ -169,6 +169,10 @@ namespace LeBlanc
                 if (IsFirstW() && W.InRange(Target))
                 {
                     W.Cast(Target);
+                    if (E.IsReady() && E.InRange(Target))
+                    {
+                        E.Cast(Target);
+                    }
                 }
                 else if (IsSecondW() && GetWMode() == 0)
                 {
