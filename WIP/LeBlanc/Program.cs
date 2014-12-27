@@ -18,7 +18,7 @@ namespace LeBlanc
         public static bool LCombo;
         public static Obj_AI_Base Clone;
 
-        private static void Main(string[] args)
+        public static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
         }
