@@ -100,8 +100,8 @@ namespace LeBlanc
 
             if (Menu.SubMenu("Combo").Item("Combo").GetValue<KeyBind>().Active)
             {
-                LauraCombo();
-                //   Combo();
+                //LauraCombo();
+                   Combo();
             }
 
 
