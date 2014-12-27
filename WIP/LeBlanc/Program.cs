@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 
@@ -17,6 +18,7 @@ namespace LeBlanc
         public static Obj_AI_Hero Player = ObjectManager.Player;
         public static bool LCombo;
         public static Obj_AI_Base Clone;
+        public static List<BuffInstance> Buffs = new List<BuffInstance>();
 
         public static void Main(string[] args)
         {
@@ -42,14 +44,19 @@ namespace LeBlanc
             var harass = Menu.AddSubMenu(new Menu("Harass Settings", "Harass"));
             harass.AddItem(
                 new MenuItem("SecondW", "Second W Setting").SetValue(
-                    new StringList(new[] { "Auto", "Manual", "After E" })));
+                    new StringList(new[] { "Manual", "Auto", "After E" })));
             harass.AddItem(new MenuItem("Harass", "Harass Key").SetValue(new KeyBind((byte) 'C', KeyBindType.Press)));
 
-            var laneclear = Menu.AddSubMenu(new Menu("LaneClear", "LaneClear"));
+            var laneclear = Menu.AddSubMenu(new Menu("Farm Settings", "LaneClear"));
             laneclear.AddItem(new MenuItem("LaneClearQ", "Use Q").SetValue(true));
-            laneclear.AddItem(new MenuItem("LaneClearQManaPercent", "Minimum Q Mana Percent").SetValue(new Slider(30)));
+            laneclear.AddItem(new MenuItem("LaneClearQPercent", "Minimum Q Mana Percent").SetValue(new Slider(30)));
             laneclear.AddItem(
                 new MenuItem("LaneClearActive", "LaneClear").SetValue(new KeyBind((byte) 'V', KeyBindType.Press)));
+
+            var clone = Menu.AddSubMenu(new Menu("Clone Settings", "Clone"));
+            clone.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
+            clone.AddItem(
+                new MenuItem("Mode", "Mode").SetValue(new StringList(new[] { "Opposite Direction", "To Target" })));
 
             Menu.AddToMainMenu();
 
@@ -68,14 +75,6 @@ namespace LeBlanc
             GameObject.OnCreate += Obj_AI_Base_OnCreate;
         }
 
-        private static void Obj_AI_Base_OnCreate(GameObject sender, EventArgs args)
-        {
-            if (sender.IsValid && sender.Name.Equals(Player.Name))
-            {
-                Clone = sender as Obj_AI_Base;
-            }
-        }
-
         private static void Game_OnGameUpdate(EventArgs args)
         {
             if (Player.IsDead)
@@ -90,18 +89,29 @@ namespace LeBlanc
                 return;
             }
 
-            if (LCombo && R.IsReady())
+            if (Clone.IsValid)
+            {
+                CloneLogic();
+            }
+
+            if (LCombo && R.IsReady() && UltType() == SpellSlot.W)
             {
                 //dfg cast
-                ObjectManager.Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
+                Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
                 E.Cast(Target);
                 LCombo = false;
             }
 
             if (Menu.SubMenu("Combo").Item("Combo").GetValue<KeyBind>().Active)
             {
-                //LauraCombo();
-                   Combo();
+                if (Player.Distance(Target) >= W.Range * 2 - 100)
+                {
+                    WCombo();
+                }
+                else
+                {
+                    Combo();
+                }
             }
 
 
@@ -118,13 +128,22 @@ namespace LeBlanc
             }
         }
 
-        private static void LauraCombo()
+        private static void Obj_AI_Base_OnCreate(GameObject sender, EventArgs args)
         {
-            if (!W.IsReady() || !IsFirstW() || !R.IsReady() || Target.Distance(Player.Position) < W.Range * 2)
+            if (sender.IsValid && sender.Name.Equals(Player.Name))
+            {
+                Clone = sender as Obj_AI_Base;
+            }
+        }
+
+        private static void WCombo()
+        {
+            if (!W.IsReady() || !IsFirstW() || !R.IsReady() || Target.Distance(Player.Position) < W.Range * 2 - 100)
             {
                 return;
             }
 
+            Console.WriteLine("LCOMBO");
             LCombo = true;
             var pos = Player.ServerPosition.To2D().Extend(Target.ServerPosition.To2D(), W.Range);
             W.Cast(pos);
@@ -132,26 +151,22 @@ namespace LeBlanc
 
         private static void Combo()
         {
-            var combo = new List<SpellSlot> { SpellSlot.Q, SpellSlot.E };
-            //var dmg = LeagueSharp.Common.Damage.GetComboDamage();
-            //  Game.PrintChat("COMBO");
-            if (W.IsReady() && W.InRange(Target) && IsFirstW())
+            if (W.CanCast(Target) && IsFirstW())
             {
                 W.Cast(Target);
             }
 
-            if (Q.IsReady() && Q.InRange(Target))
+            if (Q.CanCast(Target))
             {
                 Q.CastOnUnit(Target);
-
-                if (R.IsReady())
-                {
-                    Player.Spellbook.CastSpell(SpellSlot.R, Target);
-                    //R.CastOnUnit(Target);
-                }
             }
 
-            if (E.IsReady() && E.InRange(Target))
+            if (R.IsReady() && UltType() == SpellSlot.Q)
+            {
+                Player.Spellbook.CastSpell(SpellSlot.R, Target);
+            }
+
+            if (E.IsReady() && E.InRange(Target, 800))
             {
                 E.Cast(Target);
             }
@@ -159,30 +174,62 @@ namespace LeBlanc
 
         private static void Harass()
         {
-            if (Q.IsReady() && Q.InRange(Target))
+            if (Q.CanCast(Target))
             {
                 Q.Cast(Target);
             }
 
-            if (W.IsReady())
+            if (E.CanCast(Target))
             {
-                if (IsFirstW() && W.InRange(Target))
+                E.Cast(Target);
+            }
+
+            if (!W.IsReady())
+            {
+                return;
+            }
+
+            if (IsFirstW() && W.InRange(Target))
+            {
+                W.Cast(Target);
+            }
+            else if (IsSecondW())
+            {
+                switch (GetWMode())
                 {
-                    W.Cast(Target);
-                    if (E.IsReady() && E.InRange(Target))
-                    {
-                        E.Cast(Target);
-                    }
-                }
-                else if (IsSecondW() && GetWMode() == 0)
-                {
-                    Player.Spellbook.CastSpell(SpellSlot.W);
-                    //W.Cast();
+                    case 1:
+                        Player.Spellbook.CastSpell(SpellSlot.W);
+                        break;
+                    case 2:
+                        foreach (var b in
+                            Target.Buffs.Where(buff => buff.Name.ToLower().Contains("leblancsoulshackle")))
+                        {
+                            Player.Spellbook.CastSpell(SpellSlot.W);
+                        }
+                        break;
                 }
             }
         }
 
-        private static void LaneClear() {}
+        private static void LaneClear()
+        {
+            if (!Q.IsReady() || !Menu.SubMenu("LaneClear").Item("LaneClearQ").GetValue<bool>() ||
+                Player.ManaPercentage() < Menu.SubMenu("LaneClear").Item("LaneClearQPercent").GetValue<Slider>().Value)
+            {
+                return;
+            }
+
+            var unit =
+                ObjectManager.Get<Obj_AI_Minion>()
+                    .First(
+                        minion =>
+                            minion.IsValidTarget(Q.Range) &&
+                            minion.Health < Player.GetDamageSpell(minion, SpellSlot.Q).CalculatedDamage);
+            if (unit != null)
+            {
+                Q.CastOnUnit(unit);
+            }
+        }
 
         private static bool IsFirstW()
         {
@@ -211,6 +258,26 @@ namespace LeBlanc
                     return SpellSlot.E;
                 default:
                     return SpellSlot.R;
+            }
+        }
+
+        private static void CloneLogic()
+        {
+            if (!Clone.IsValid || !Menu.SubMenu("Clone").Item("Enabled").GetValue<bool>())
+            {
+                return;
+            }
+
+            var mode = Menu.SubMenu("Clone").Item("Mode").GetValue<StringList>().SelectedIndex;
+
+            switch (mode)
+            {
+                case 0: // toward player
+                    Clone.IssueOrder(GameObjectOrder.MoveTo, Player);
+                    break;
+                case 1: //toward target
+                    Clone.IssueOrder(GameObjectOrder.AttackUnit, Target);
+                    break;
             }
         }
     }
