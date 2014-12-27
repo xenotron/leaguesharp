@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using LeagueSharp.Common.Orbwalking;
 
 #endregion
 
@@ -14,14 +15,12 @@ namespace TUrgot
     internal class Program
     {
         public const string ChampName = "Urgot";
-        public static Orbwalking.Orbwalker Orbwalker;
+        public static Orbwalker Orbwalker;
         public static Obj_AI_Hero Player;
-
         public static List<Spell> SpellList = new List<Spell>();
         public static Spell Q, Q2, W, E;
         public static SpellDataInst Ignite;
         public static Menu Menu;
-
         public static readonly StringList HitchanceList = new StringList(new[] { "Low", "Medium", "High", "Very High" });
 
         private static void Main(string[] args)
@@ -57,10 +56,10 @@ namespace TUrgot
             Menu = new Menu("Trees " + ChampName, ChampName, true);
 
             Menu.AddSubMenu(new Menu("Orbwalker", "Orbwalker"));
-            Orbwalker = new Orbwalking.Orbwalker(Menu.SubMenu("Orbwalker"));
+            Orbwalker = new Orbwalker(Menu.SubMenu("Orbwalker"));
 
             var ts = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(ts);
+            TargetSelector.AddToMenu(ts);
             Menu.AddSubMenu(ts);
 
             Menu.AddSubMenu(new Menu("Combo", "Combo"));
@@ -152,12 +151,11 @@ namespace TUrgot
             }
         }
 
-
         private static void CastLogic()
         {
             SmartQ();
 
-            var target = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Physical);
+            var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
             if (target == null ||
                 (!Menu.Item("ComboActive").GetValue<KeyBind>().Active &&
                  !Menu.Item("HarassActive").GetValue<KeyBind>().Active))
@@ -167,7 +165,7 @@ namespace TUrgot
 
             var mode = Menu.Item("ComboActive").GetValue<KeyBind>().Active ? "Combo" : "Harass";
 
-            CastE(SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical), mode);
+            CastE(TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical), mode);
             CastQ(target, mode);
         }
 
@@ -211,7 +209,8 @@ namespace TUrgot
             }
             else
             {
-                E.CastIfHitchanceEquals(SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical), HitChance.High);
+                E.CastIfHitchanceEquals(
+                    TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical), HitChance.High);
             }
         }
 
