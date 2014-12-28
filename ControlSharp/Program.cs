@@ -111,8 +111,8 @@ namespace ControlSharp
                 CurrentMode = Orbwalking.OrbwalkingMode.None;
             }
 
-            var S1 = ObjectManager.Player.SummonerSpellbook.GetSpell(SpellSlot.Summoner1);
-            var S2 = ObjectManager.Player.SummonerSpellbook.GetSpell(SpellSlot.Summoner2);
+            var S1 = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner1);
+            var S2 = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner2);
 
             if (Controller.LeftTrigger > 0 && S1.State == SpellState.Ready)
             {
@@ -133,17 +133,17 @@ namespace ControlSharp
             switch (spell.Name.ToLower().Replace("summoner", ""))
             {
                 case "barrier":
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    ObjectManager.Player.Spellbook.CastSpell(spell.Slot);
                     break;
                 case "boost":
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    ObjectManager.Player.Spellbook.CastSpell(spell.Slot);
                     break;
                 case "dot":
                     foreach (
                         var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(h => h.IsValidTarget(550) && h.Health < 600)
                         )
                     {
-                        ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot, enemy);
+                        ObjectManager.Player.Spellbook.CastSpell(spell.Slot, enemy);
                         break;
                     }
                     break;
@@ -151,19 +151,19 @@ namespace ControlSharp
                     Controller.Update();
                     var pos = ObjectManager.Player.ServerPosition.To2D() + (Controller.LeftStick.Position / 75);
                     pos.Extend(ObjectManager.Player.ServerPosition.To2D(), 550);
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot, pos.To3D());
+                    ObjectManager.Player.Spellbook.CastSpell(spell.Slot, pos.To3D());
                     break;
                 case "haste":
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    ObjectManager.Player.Spellbook.CastSpell(spell.Slot);
                     break;
                 case "heal":
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    ObjectManager.Player.Spellbook.CastSpell(spell.Slot);
                     break;
                 case "mana":
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    ObjectManager.Player.Spellbook.CastSpell(spell.Slot);
                     break;
                 case "revive":
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(spell.Slot);
+                    ObjectManager.Player.Spellbook.CastSpell(spell.Slot);
                     break;
             }
         }
