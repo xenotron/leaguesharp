@@ -109,13 +109,14 @@ namespace LeBlanc
                 }
                 //dfg cast
                 Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
+                Q.CastOnUnit(Target);
                 E.Cast(Target);
                 LCombo = false;
             }
 
             if (Menu.SubMenu("Combo").Item("Combo").GetValue<KeyBind>().Active)
             {
-                if (Menu.SubMenu("Combo").SubMenu("GapClose").Item("GapClose").GetValue<bool>() &&
+                if (!LCombo && Menu.SubMenu("Combo").SubMenu("GapClose").Item("GapClose").GetValue<bool>() &&
                     Target.Distance(Player.Position) > W.Range * 2 - 100)
                 {
                     WCombo();
