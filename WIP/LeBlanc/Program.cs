@@ -107,7 +107,7 @@ namespace LeBlanc
                     Player.Spellbook.CastSpell(SpellSlot.W);
                     return;
                 }
-                //dfg cast
+                ItemId.Deathfire_Grasp.Cast(Target);
                 Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
                 Q.CastOnUnit(Target);
                 E.Cast(Target);
