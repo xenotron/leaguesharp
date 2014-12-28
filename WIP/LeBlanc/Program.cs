@@ -29,7 +29,11 @@ namespace LeBlanc
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            Console.Clear();
+            if (Player.ChampionName.ToLower() != "leblanc")
+            {
+                return;
+            }
+
             Menu = new Menu("LeBlanc The Schemer", "LeBlanc", true);
 
             Menu.AddSubMenu(new Menu("Orbwalker", "Orbwalker"));
