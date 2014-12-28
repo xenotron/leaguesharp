@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 
 namespace LeBlanc
 {
@@ -19,6 +20,7 @@ namespace LeBlanc
         public static bool LCombo;
         public static Obj_AI_Base Clone;
         public static List<BuffInstance> Buffs = new List<BuffInstance>();
+        public static Vector3 Pos;
 
         public static void Main(string[] args)
         {
@@ -27,6 +29,7 @@ namespace LeBlanc
 
         private static void Game_OnGameLoad(EventArgs args)
         {
+            Console.Clear();
             Menu = new Menu("LeBlanc The Schemer", "LeBlanc", true);
 
             Menu.AddSubMenu(new Menu("Orbwalker", "Orbwalker"));
@@ -39,12 +42,12 @@ namespace LeBlanc
             var combo = new Menu("Combo Settings", "Combo");
 
             var gapclose = combo.AddSubMenu(new Menu("GapClose", "Gap Close Combo"));
-            gapclose.AddItem(new MenuItem("GapClose", "Use GapClose Combo").SetValue(true));
+            gapclose.AddItem(new MenuItem("GapCloseEnabled", "Use GapClose Combo").SetValue(true));
             //replace with damage calcs
             gapclose.AddItem(new MenuItem("TargetHP", "Min Target HP %").SetValue(new Slider(40)));
             gapclose.AddItem(new MenuItem("PlayerHP", "Min Player HP %").SetValue(new Slider(40)));
 
-            combo.AddItem(new MenuItem("Combo", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
+            combo.AddItem(new MenuItem("ComboEnabled", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             Menu.AddSubMenu(combo);
 
             var harass = Menu.AddSubMenu(new Menu("Harass Settings", "Harass"));
@@ -62,14 +65,15 @@ namespace LeBlanc
             var clone = Menu.AddSubMenu(new Menu("Clone Settings", "Clone"));
             clone.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
             clone.AddItem(
-                new MenuItem("Mode", "Mode").SetValue(new StringList(new[] { "Opposite Direction", "To Target" })));
+                new MenuItem("Mode", "Mode").SetValue(
+                    new StringList(new[] { "To Player", "To Target", "Away from Player" })));
 
             Menu.AddToMainMenu();
 
             Q = new Spell(SpellSlot.Q, 700);
             Q.SetTargetted(.401f, 2000);
 
-            W = new Spell(SpellSlot.W, 550);
+            W = new Spell(SpellSlot.W, 600);
             W.SetSkillshot(.5f, 100, 2000, false, SkillshotType.SkillshotCircle);
 
             E = new Spell(SpellSlot.E, 970);
@@ -79,52 +83,81 @@ namespace LeBlanc
 
             Game.OnGameUpdate += Game_OnGameUpdate;
             GameObject.OnCreate += Obj_AI_Base_OnCreate;
+            // Spellbook.OnCastSpell += Spellbook_OnCastSpell;
+            // Console.WriteLine(Player.Spellbook.GetSpell(SpellSlot.R).Name);
+        }
+
+        private static void Spellbook_OnCastSpell(GameObject sender, SpellbookCastSpellEventArgs args)
+        {
+            if (sender == null || !sender.IsValid || !sender.IsMe)
+            {
+                return;
+            }
+            Console.WriteLine("TEST");
+            if (Target == null || !Target.IsValid || !LCombo)
+            {
+                Console.WriteLine("NO TARG");
+                return;
+            }
+            if (args.Slot != SpellSlot.W || UltType() == SpellSlot.R)
+            {
+                Console.WriteLine("RETURN");
+                return;
+            }
+            Utility.DelayAction.Add(
+                160, () =>
+                {
+                    Console.WriteLine("ULT");
+                    Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
+                    LCombo = false;
+                });
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            //Utility.DrawCircle(Player.Position, W.Range * 2, Color.Red);
             if (Player.IsDead)
             {
                 return;
             }
 
-            Target = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Magical);
-
+            try
+            {
+                Target = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Magical);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
             if (Target == null || !Target.IsValid)
             {
                 return;
             }
 
-            if (Clone.IsValid)
+            if (Clone == null || Clone.IsValid)
             {
                 CloneLogic();
             }
 
-            if (LCombo && R.IsReady() && UltType() == SpellSlot.W)
+            /*   if (LCombo && R.IsReady() && UltType() == SpellSlot.W)
             {
+               Console.WriteLine("L23");
                 if (Player.HealthPercentage() < 20 && IsSecondW())
                 {
                     Player.Spellbook.CastSpell(SpellSlot.W);
                     return;
                 }
                 ItemId.Deathfire_Grasp.Cast(Target);
-                Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
+              //  Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
                 Q.CastOnUnit(Target);
                 E.Cast(Target);
                 LCombo = false;
             }
-
-            if (Menu.SubMenu("Combo").Item("Combo").GetValue<KeyBind>().Active)
+        */
+            if (Menu.SubMenu("Combo").Item("ComboEnabled").GetValue<KeyBind>().Active)
             {
-                if (!LCombo && Menu.SubMenu("Combo").SubMenu("GapClose").Item("GapClose").GetValue<bool>() &&
-                    Target.Distance(Player.Position) > W.Range * 2 - 100)
-                {
-                    WCombo();
-                }
-                else
-                {
-                    Combo();
-                }
+                Comboes();
+                return;
             }
 
 
@@ -141,6 +174,23 @@ namespace LeBlanc
             }
         }
 
+        private static void Comboes()
+        {
+            //Menu.Item("GapCloseEnabled").GetValue<bool>() &&
+            /*if (LCombo)
+            {
+                return;
+            }
+            */
+
+            if (Player.Distance(Target) < W.Range * 2)
+            {
+                Target = TargetSelector.GetTarget(800, TargetSelector.DamageType.Magical);
+                Combo();
+            }
+            // WCombo();
+        }
+
         private static void Obj_AI_Base_OnCreate(GameObject sender, EventArgs args)
         {
             if (sender.IsValid && sender.Name.Equals(Player.Name))
@@ -151,11 +201,10 @@ namespace LeBlanc
 
         private static void WCombo()
         {
-            if (!W.IsReady() || !IsFirstW() || !R.IsReady() || Target.Distance(Player.Position) < W.Range * 2 - 100 ||
-                Target.HealthPercentage() <
-                Menu.SubMenu("Combo").SubMenu("GapClose").Item("TargetHP").GetValue<Slider>().Value ||
-                Player.HealthPercentage() <
-                Menu.SubMenu("Combo").SubMenu("GapClose").Item("PlayerHP").GetValue<Slider>().Value)
+            if (!W.IsReady() || !IsFirstW() || !R.IsReady() || Target == null || !Target.IsValid ||
+                Target.Distance(Player.Position) < W.Range * 2 - 100 ||
+                Target.HealthPercentage() < Menu.Item("TargetHP").GetValue<Slider>().Value ||
+                Player.HealthPercentage() < Menu.Item("PlayerHP").GetValue<Slider>().Value)
             {
                 return;
             }
@@ -164,13 +213,37 @@ namespace LeBlanc
             LCombo = true;
             var pos = Player.ServerPosition.To2D().Extend(Target.ServerPosition.To2D(), W.Range);
             W.Cast(pos);
+            /* Utility.DelayAction.Add(150, () =>
+            {
+                if (Player.Distance(Target) < 970)
+                {
+                    ItemId.Blackfire_Torch.Cast(Target);
+                }
+                if (UltType() == SpellSlot.W)
+                {
+                    Player.Spellbook.CastSpell(SpellSlot.R, Target.ServerPosition);
+                }
+                LCombo = false;
+            });
+        
+            */
         }
 
         private static void Combo()
         {
+            if (Target == null || !Target.IsValid)
+            {
+                return;
+            }
+
+            if (Player.Distance(Target) < 970)
+            {
+                //   ItemId.Blackfire_Torch.Cast(Target);
+            }
+
             if (W.CanCast(Target) && IsFirstW() && Player.HealthPercentage() >= 20)
             {
-                W.Cast(Target);
+                W.RandomizeCast(Target.Position);
             }
 
             if (Q.CanCast(Target))
@@ -265,8 +338,13 @@ namespace LeBlanc
 
         private static SpellSlot UltType()
         {
+            if (R.Instance.Name == null)
+            {
+                return SpellSlot.R;
+            }
             switch (R.Instance.Name)
             {
+                //leblancslidereturnm
                 case "LeblancChaosOrbM":
                     return SpellSlot.Q;
                 case "LeblancSlideM":
@@ -280,7 +358,7 @@ namespace LeBlanc
 
         private static void CloneLogic()
         {
-            if (!Clone.IsValid || !Menu.SubMenu("Clone").Item("Enabled").GetValue<bool>())
+            if (Clone == null || !Clone.IsValid || !Menu.SubMenu("Clone").Item("Enabled").GetValue<bool>())
             {
                 return;
             }
@@ -290,10 +368,21 @@ namespace LeBlanc
             switch (mode)
             {
                 case 0: // toward player
-                    Clone.IssueOrder(GameObjectOrder.MoveTo, Player);
+                    var pos = Player.ServerPosition;
+                    if (Player.GetWaypoints().Count > 1)
+                    {
+                        pos = Player.GetWaypoints()[1].To3D();
+                    }
+                    Utility.DelayAction.Add(100, () => { Clone.IssueOrder(GameObjectOrder.MovePet, pos); });
                     break;
                 case 1: //toward target
-                    Clone.IssueOrder(GameObjectOrder.AttackUnit, Target);
+                    if (Clone.CanAttack && !Clone.IsWindingUp) // && !Clone.IsAutoAttacking)
+                    {
+                        Clone.IssueOrder(GameObjectOrder.AutoAttackPet, Target);
+                    }
+                    break;
+                case 2: //away from player
+                    Clone.IssueOrder(GameObjectOrder.MovePet, Player.Position.Extend(Clone.Position, 200));
                     break;
             }
         }

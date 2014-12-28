@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 
 namespace LeBlanc
 {
@@ -32,6 +35,13 @@ namespace LeBlanc
         public static bool CanCast(this InventorySlot slot)
         {
             return ObjectManager.Player.Spellbook.GetSpell(slot.SpellSlot).IsReady();
+        }
+
+        public static void RandomizeCast(this Spell spell, Vector3 position)
+        {
+            var rnd = new Random(Environment.TickCount);
+            var pos = new Vector2(position.X + rnd.Next(25), position.Y + rnd.Next(25)).To3D();
+            spell.Cast(pos);
         }
     }
 }
