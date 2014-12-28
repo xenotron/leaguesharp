@@ -37,7 +37,13 @@ namespace LeBlanc
             Menu.AddSubMenu(ts);
 
             var combo = new Menu("Combo Settings", "Combo");
-            combo.AddItem(new MenuItem("SmartW", "Use Smart W").SetValue(true));
+
+            var gapclose = combo.AddSubMenu(new Menu("GapClose", "Gap Close Combo"));
+            gapclose.AddItem(new MenuItem("GapClose", "Use GapClose Combo").SetValue(true));
+            //replace with damage calcs
+            gapclose.AddItem(new MenuItem("TargetHP", "Min Target HP %").SetValue(new Slider(40)));
+            gapclose.AddItem(new MenuItem("PlayerHP", "Min Player HP %").SetValue(new Slider(40)));
+
             combo.AddItem(new MenuItem("Combo", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             Menu.AddSubMenu(combo);
 
@@ -96,6 +102,11 @@ namespace LeBlanc
 
             if (LCombo && R.IsReady() && UltType() == SpellSlot.W)
             {
+                if (Player.HealthPercentage() < 20 && IsSecondW())
+                {
+                    Player.Spellbook.CastSpell(SpellSlot.W);
+                    return;
+                }
                 //dfg cast
                 Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
                 E.Cast(Target);
@@ -104,7 +115,8 @@ namespace LeBlanc
 
             if (Menu.SubMenu("Combo").Item("Combo").GetValue<KeyBind>().Active)
             {
-                if (Player.Distance(Target) >= W.Range * 2 - 100)
+                if (Menu.SubMenu("Combo").SubMenu("GapClose").Item("GapClose").GetValue<bool>() &&
+                    Target.Distance(Player.Position) > W.Range * 2 - 100)
                 {
                     WCombo();
                 }
@@ -138,7 +150,11 @@ namespace LeBlanc
 
         private static void WCombo()
         {
-            if (!W.IsReady() || !IsFirstW() || !R.IsReady() || Target.Distance(Player.Position) < W.Range * 2 - 100)
+            if (!W.IsReady() || !IsFirstW() || !R.IsReady() || Target.Distance(Player.Position) < W.Range * 2 - 100 ||
+                Target.HealthPercentage() <
+                Menu.SubMenu("Combo").SubMenu("GapClose").Item("TargetHP").GetValue<Slider>().Value ||
+                Player.HealthPercentage() <
+                Menu.SubMenu("Combo").SubMenu("GapClose").Item("PlayerHP").GetValue<Slider>().Value)
             {
                 return;
             }
@@ -151,7 +167,7 @@ namespace LeBlanc
 
         private static void Combo()
         {
-            if (W.CanCast(Target) && IsFirstW())
+            if (W.CanCast(Target) && IsFirstW() && Player.HealthPercentage() >= 20)
             {
                 W.Cast(Target);
             }
@@ -184,7 +200,7 @@ namespace LeBlanc
                 E.Cast(Target);
             }
 
-            if (!W.IsReady())
+            if (!W.IsReady() || Player.HealthPercentage() < 20)
             {
                 return;
             }
