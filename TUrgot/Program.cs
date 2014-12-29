@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
-using LeagueSharp.Common.Orbwalking;
 
 #endregion
 
@@ -15,7 +14,7 @@ namespace TUrgot
     internal class Program
     {
         public const string ChampName = "Urgot";
-        public static Orbwalker Orbwalker;
+        public static Orbwalking.Orbwalker Orbwalker;
         public static Obj_AI_Hero Player;
         public static List<Spell> SpellList = new List<Spell>();
         public static Spell Q, Q2, W, E;
@@ -56,7 +55,7 @@ namespace TUrgot
             Menu = new Menu("Trees " + ChampName, ChampName, true);
 
             Menu.AddSubMenu(new Menu("Orbwalker", "Orbwalker"));
-            Orbwalker = new Orbwalker(Menu.SubMenu("Orbwalker"));
+            Orbwalker = new Orbwalking.Orbwalker(Menu.SubMenu("Orbwalker"));
 
             var ts = new Menu("Target Selector", "Target Selector");
             TargetSelector.AddToMenu(ts);
