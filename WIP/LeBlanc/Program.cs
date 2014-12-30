@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
-using SharpDX;
 
 namespace LeBlanc
 {
@@ -19,8 +17,7 @@ namespace LeBlanc
         public static Obj_AI_Hero Player = ObjectManager.Player;
         public static bool LCombo;
         public static Obj_AI_Base Clone;
-        public static List<BuffInstance> Buffs = new List<BuffInstance>();
-        public static Vector3 Pos;
+        public static SpellDataInst Ignite;
 
         public static void Main(string[] args)
         {
@@ -46,15 +43,28 @@ namespace LeBlanc
             var combo = new Menu("Combo Settings", "Combo");
 
             var gapclose = combo.AddSubMenu(new Menu("GapClose", "Gap Close Combo"));
+            gapclose.AddItem(new MenuItem("Spacer", "This doesn't work yet"));
             gapclose.AddItem(new MenuItem("GapCloseEnabled", "Use GapClose Combo").SetValue(true));
             //replace with damage calcs
             gapclose.AddItem(new MenuItem("TargetHP", "Min Target HP %").SetValue(new Slider(40)));
             gapclose.AddItem(new MenuItem("PlayerHP", "Min Player HP %").SetValue(new Slider(40)));
 
+            combo.AddItem(new MenuItem("ComboQ", "Use Q").SetValue(true));
+            combo.AddItem(new MenuItem("ComboW", "Use W").SetValue(true));
+            combo.AddItem(new MenuItem("ComboE", "Use E").SetValue(true));
+            combo.AddItem(new MenuItem("ComboR", "Use R").SetValue(true));
+            combo.AddItem(new MenuItem("ComboQRange", "Only Combo in Q Range").SetValue(true));
+            combo.AddItem(
+                new MenuItem("ComboUltMode", "Ult Mode").SetValue(new StringList(new[] { SpellSlot.Q.ToString() })));
+            // SpellSlot.W.ToString(), SpellSlot.E.ToString() })));
             combo.AddItem(new MenuItem("ComboEnabled", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             Menu.AddSubMenu(combo);
 
             var harass = Menu.AddSubMenu(new Menu("Harass Settings", "Harass"));
+            harass.AddItem(new MenuItem("HarassQ", "Use Q").SetValue(true));
+            harass.AddItem(new MenuItem("HarassW", "Use W").SetValue(true));
+            harass.AddItem(new MenuItem("HarassE", "Use E").SetValue(true));
+            harass.AddItem(new MenuItem("HarassR", "Use R").SetValue(true));
             harass.AddItem(
                 new MenuItem("SecondW", "Second W Setting").SetValue(
                     new StringList(new[] { "Manual", "Auto", "After E" })));
@@ -72,7 +82,14 @@ namespace LeBlanc
                 new MenuItem("Mode", "Mode").SetValue(
                     new StringList(new[] { "To Player", "To Target", "Away from Player" })));
 
+            var misc = Menu.AddSubMenu(new Menu("Misc Settings", "Misc"));
+            misc.AddItem(new MenuItem("MiscItems", "Use Items (DFG)").SetValue(true));
+            misc.AddItem(new MenuItem("MiscW2", "Use Second W").SetValue(true));
+            misc.AddItem(new MenuItem("MiscW2HP", "HP% to Use Second W").SetValue(new Slider(20)));
+
             Menu.AddToMainMenu();
+
+            Ignite = Player.Spellbook.GetSpell(Player.GetSpellSlot("summonerdot"));
 
             Q = new Spell(SpellSlot.Q, 700);
             Q.SetTargetted(.401f, 2000);
@@ -85,29 +102,34 @@ namespace LeBlanc
 
             R = new Spell(SpellSlot.R);
 
+            Game.PrintChat(
+                "<b><font color =\"#FFFFFF\">LeBlanc the Schemer by </font><font color=\"#5C00A3\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
+
             Game.OnGameUpdate += Game_OnGameUpdate;
             GameObject.OnCreate += Obj_AI_Base_OnCreate;
-            // Spellbook.OnCastSpell += Spellbook_OnCastSpell;
+            //Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             // Console.WriteLine(Player.Spellbook.GetSpell(SpellSlot.R).Name);
         }
 
-        private static void Spellbook_OnCastSpell(GameObject sender, SpellbookCastSpellEventArgs args)
+        private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (sender == null || !sender.IsValid || !sender.IsMe)
             {
                 return;
             }
-            Console.WriteLine("TEST");
-            if (Target == null || !Target.IsValid || !LCombo)
+
+            if (Target == null || !Target.IsValid) // || !LCombo)
             {
                 Console.WriteLine("NO TARG");
                 return;
             }
-            if (args.Slot != SpellSlot.W || UltType() == SpellSlot.R)
+
+            /*  if (args.Slot != SpellSlot.W || UltType() == SpellSlot.R)
             {
                 Console.WriteLine("RETURN");
                 return;
-            }
+            }*/
+
             Utility.DelayAction.Add(
                 160, () =>
                 {
@@ -119,28 +141,20 @@ namespace LeBlanc
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            //Utility.DrawCircle(Player.Position, W.Range * 2, Color.Red);
             if (Player.IsDead)
             {
                 return;
             }
 
-            try
-            {
-                Target = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Magical);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-            if (Target == null || !Target.IsValid)
+            KSIgnite();
+            CloneLogic();
+            SecondWLogic();
+
+            Target = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Magical);
+
+            if (Target == null || !Target.IsValid || !Target.IsValidTarget(2000))
             {
                 return;
-            }
-
-            if (Clone == null || Clone.IsValid)
-            {
-                CloneLogic();
             }
 
             /*   if (LCombo && R.IsReady() && UltType() == SpellSlot.W)
@@ -178,6 +192,14 @@ namespace LeBlanc
             }
         }
 
+        private static void Obj_AI_Base_OnCreate(GameObject sender, EventArgs args)
+        {
+            if (sender.IsValid && sender.Name.Equals(Player.Name))
+            {
+                Clone = sender as Obj_AI_Base;
+            }
+        }
+
         private static void Comboes()
         {
             //Menu.Item("GapCloseEnabled").GetValue<bool>() &&
@@ -195,11 +217,45 @@ namespace LeBlanc
             // WCombo();
         }
 
-        private static void Obj_AI_Base_OnCreate(GameObject sender, EventArgs args)
+        private static void Combo()
         {
-            if (sender.IsValid && sender.Name.Equals(Player.Name))
+            if (Target == null || !Target.IsValid ||
+                !Target.IsValidTarget(Menu.Item("ComboQRange").GetValue<bool>() ? Q.Range : float.MaxValue))
             {
-                Clone = sender as Obj_AI_Base;
+                return;
+            }
+
+            var castQ = Menu.Item("ComboQ").GetValue<bool>();
+            var castW = Menu.Item("ComboW").GetValue<bool>();
+            var castE = Menu.Item("ComboE").GetValue<bool>();
+            var castR = Menu.Item("ComboR").GetValue<bool>();
+            var castItems = Menu.Item("MiscItems").GetValue<bool>();
+
+            if (castItems && Player.Distance(Target) <= 750 && Q.IsReady() && W.IsReady() && E.IsReady() && R.IsReady())
+            {
+                ItemId.Deathfire_Grasp.Cast(Target);
+                ItemId.Blackfire_Torch.Cast(Target);
+            }
+
+            if (castW && W.CanCast(Target) && IsFirstW() && Player.HealthPercentage() >= 20)
+            {
+                W.RandomizeCast(Target.Position);
+            }
+
+            if (castQ && Q.CanCast(Target))
+            {
+                Q.CastOnUnit(Target);
+                return;
+            }
+
+            if (castR && R.IsReady() && UltType() == SpellSlot.Q)
+            {
+                Player.Spellbook.CastSpell(SpellSlot.R, Target);
+            }
+
+            if (castE && E.IsReady() && E.InRange(Target, 800))
+            {
+                E.CastIfHitchanceEquals(Target, HitChance.Medium);
             }
         }
 
@@ -233,52 +289,23 @@ namespace LeBlanc
             */
         }
 
-        private static void Combo()
-        {
-            if (Target == null || !Target.IsValid)
-            {
-                return;
-            }
-
-            if (Player.Distance(Target) < 970)
-            {
-                //   ItemId.Blackfire_Torch.Cast(Target);
-            }
-
-            if (W.CanCast(Target) && IsFirstW() && Player.HealthPercentage() >= 20)
-            {
-                W.RandomizeCast(Target.Position);
-            }
-
-            if (Q.CanCast(Target))
-            {
-                Q.CastOnUnit(Target);
-            }
-
-            if (R.IsReady() && UltType() == SpellSlot.Q)
-            {
-                Player.Spellbook.CastSpell(SpellSlot.R, Target);
-            }
-
-            if (E.IsReady() && E.InRange(Target, 800))
-            {
-                E.Cast(Target);
-            }
-        }
-
         private static void Harass()
         {
-            if (Q.CanCast(Target))
+            var castQ = Menu.Item("HarassQ").GetValue<bool>();
+            var castW = Menu.Item("HarassW").GetValue<bool>();
+            var castE = Menu.Item("HarassE").GetValue<bool>();
+
+            if (castQ && Q.CanCast(Target))
             {
                 Q.Cast(Target);
             }
 
-            if (E.CanCast(Target))
+            if (castE && E.CanCast(Target))
             {
                 E.Cast(Target);
             }
 
-            if (!W.IsReady() || Player.HealthPercentage() < 20)
+            if (!castW || !W.IsReady() || Player.HealthPercentage() < 20)
             {
                 return;
             }
@@ -287,6 +314,7 @@ namespace LeBlanc
             {
                 W.Cast(Target);
             }
+
             else if (IsSecondW())
             {
                 switch (GetWMode())
@@ -315,11 +343,11 @@ namespace LeBlanc
 
             var unit =
                 ObjectManager.Get<Obj_AI_Minion>()
-                    .First(
+                    .FirstOrDefault(
                         minion =>
                             minion.IsValidTarget(Q.Range) &&
                             minion.Health < Player.GetDamageSpell(minion, SpellSlot.Q).CalculatedDamage);
-            if (unit != null)
+            if (unit != null && unit.IsValid)
             {
                 Q.CastOnUnit(unit);
             }
@@ -360,6 +388,16 @@ namespace LeBlanc
             }
         }
 
+        private static void SecondWLogic()
+        {
+            if (Menu.Item("MiscW2").GetValue<bool>() &&
+                Player.HealthPercentage() <= Menu.Item("MiscW2HP").GetValue<Slider>().Value && W.IsReady() &&
+                IsSecondW() && !Q.IsReady() && !E.IsReady())
+            {
+                Player.Spellbook.CastSpell(SpellSlot.W);
+            }
+        }
+
         private static void CloneLogic()
         {
             if (Clone == null || !Clone.IsValid || !Menu.SubMenu("Clone").Item("Enabled").GetValue<bool>())
@@ -388,6 +426,20 @@ namespace LeBlanc
                 case 2: //away from player
                     Clone.IssueOrder(GameObjectOrder.MovePet, Player.Position.Extend(Clone.Position, 200));
                     break;
+            }
+        }
+
+        private static void KSIgnite()
+        {
+            var unit =
+                ObjectManager.Get<Obj_AI_Hero>()
+                    .FirstOrDefault(
+                        obj =>
+                            obj.IsValidTarget(600) &&
+                            obj.Health < Player.GetSummonerSpellDamage(obj, Damage.SummonerSpell.Ignite));
+            if (unit != null && unit.IsValid)
+            {
+                Player.Spellbook.CastSpell(Ignite.Slot, unit);
             }
         }
     }
