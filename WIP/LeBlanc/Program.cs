@@ -57,7 +57,7 @@ namespace LeBlanc
             combo.AddItem(
                 new MenuItem("ComboUltMode", "Ult Mode").SetValue(new StringList(new[] { SpellSlot.Q.ToString() })));
             // SpellSlot.W.ToString(), SpellSlot.E.ToString() })));
-            combo.AddItem(new MenuItem("ComboEnabled", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
+            combo.AddItem(new MenuItem("ComboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             Menu.AddSubMenu(combo);
 
             var harass = Menu.AddSubMenu(new Menu("Harass Settings", "Harass"));
@@ -83,6 +83,7 @@ namespace LeBlanc
                     new StringList(new[] { "To Player", "To Target", "Away from Player" })));
 
             var misc = Menu.AddSubMenu(new Menu("Misc Settings", "Misc"));
+            misc.AddItem(new MenuItem("Interrupt", "Interrupt Spells").SetValue(true));
             misc.AddItem(new MenuItem("MiscItems", "Use Items (DFG)").SetValue(true));
             misc.AddItem(new MenuItem("MiscW2", "Use Second W").SetValue(true));
             misc.AddItem(new MenuItem("MiscW2HP", "HP% to Use Second W").SetValue(new Slider(20)));
@@ -107,8 +108,35 @@ namespace LeBlanc
 
             Game.OnGameUpdate += Game_OnGameUpdate;
             GameObject.OnCreate += Obj_AI_Base_OnCreate;
+            Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             //Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             // Console.WriteLine(Player.Spellbook.GetSpell(SpellSlot.R).Name);
+        }
+
+        private static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
+        {
+            if (!Menu.Item("Interrupt").GetValue<bool>() || unit == null || !unit.IsValid ||
+                !unit.IsValidTarget(E.Range) || spell.DangerLevel < InterruptableDangerLevel.High)
+            {
+                return;
+            }
+
+            if (!E.IsReady())
+            {
+                return;
+            }
+
+            E.CastIfHitchanceEquals(unit, HitChance.Medium);
+
+            Utility.DelayAction.Add(
+                (int) E.Delay * 1000 + 100, () =>
+                {
+                    if (R.IsReady() && UltType() == SpellSlot.E)
+                    {
+                        SetRMode(SpellSlot.E);
+                        R.CastIfHitchanceEquals(unit, HitChance.Medium);
+                    }
+                });
         }
 
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -118,25 +146,31 @@ namespace LeBlanc
                 return;
             }
 
-            if (Target == null || !Target.IsValid) // || !LCombo)
+            if (Target == null || !Target.IsValid || !Menu.Item("ComboKey").GetValue<bool>() ||
+                args.SData.Name != Q.Instance.Name) // || !LCombo)
             {
                 Console.WriteLine("NO TARG");
                 return;
             }
 
+            Console.WriteLine("CAST ULT");
+            SetRMode(SpellSlot.Q);
+            R.CastOnUnit(Target);
             /*  if (args.Slot != SpellSlot.W || UltType() == SpellSlot.R)
             {
                 Console.WriteLine("RETURN");
                 return;
             }*/
 
-            Utility.DelayAction.Add(
+            /*  Utility.DelayAction.Add(
                 160, () =>
                 {
                     Console.WriteLine("ULT");
                     Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
                     LCombo = false;
                 });
+
+           */
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
@@ -172,7 +206,7 @@ namespace LeBlanc
                 LCombo = false;
             }
         */
-            if (Menu.SubMenu("Combo").Item("ComboEnabled").GetValue<KeyBind>().Active)
+            if (Menu.SubMenu("Combo").Item("ComboKey").GetValue<KeyBind>().Active)
             {
                 Comboes();
                 return;
@@ -385,6 +419,25 @@ namespace LeBlanc
                     return SpellSlot.E;
                 default:
                     return SpellSlot.R;
+            }
+        }
+
+        private static void SetRMode(SpellSlot slot)
+        {
+            switch (slot)
+            {
+                case SpellSlot.Q:
+                    R.Range = 700;
+                    R.SetTargetted(.401f, 2000);
+                    return;
+                case SpellSlot.W:
+                    R = new Spell(SpellSlot.R, 600);
+                    R.SetSkillshot(.5f, 100, 2000, false, SkillshotType.SkillshotCircle);
+                    return;
+                case SpellSlot.E:
+                    R = new Spell(SpellSlot.R, 970);
+                    R.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
+                    return;
             }
         }
 
