@@ -33,7 +33,7 @@ namespace OathswornCaster
             Menu = new Menu("OathswornCaster", "OathswornCaster", true);
             Menu.AddItem(new MenuItem("Enabled", "Enabled").SetValue(new KeyBind(32, KeyBindType.Press)));
             Menu.AddItem(new MenuItem("Health", "Min Health %").SetValue(new Slider(30)));
-            Menu.AddItem(new MenuItem("BlockCamera", "Block Camera Packet").SetValue(true));
+           // Menu.AddItem(new MenuItem("BlockCamera", "Block Camera Packet").SetValue(true));
             Menu.AddToMainMenu();
 
             Game.PrintChat(
@@ -41,17 +41,6 @@ namespace OathswornCaster
 
          //   Game.OnGameProcessPacket += Game_OnGameProcessPacket;
             Game.OnGameUpdate += Game_OnGameUpdate;
-        }
-
-        private static void Game_OnGameProcessPacket(GamePacketEventArgs args)
-        {
-            if (args.PacketData[0] != Packet.MultiPacket.Header ||
-                args.PacketData[5] != (byte) Packet.MultiPacketType.LockCamera ||
-                !Menu.Item("BlockCamera").GetValue<bool>())
-            {
-                return;
-            }
-            args.Process = false;
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
@@ -75,11 +64,12 @@ namespace OathswornCaster
                 return;
             }
 
-            var targ = SimpleTs.GetTarget(350, SimpleTs.DamageType.Magical);
+            var targ = TargetSelector.GetTarget(350, TargetSelector.DamageType.Magical);
             var pos = targ.IsValidTarget() ? targ.ServerPosition : Game.CursorPos;
-            var p = new Packet.C2S.Cast.Struct(0, Oathsworn.Slot, -1, pos.X, pos.Y, pos.X, pos.Y, 0xF2);
+            Oathsworn.Cast(pos);
+            //var p = new Packet.C2S.Cast.Struct(0, Oathsworn.Slot, -1, pos.X, pos.Y, pos.X, pos.Y, 0xF2);
 
-            Packet.C2S.Cast.Encoded(p).Send();
+            //Packet.C2S.Cast.Encoded(p).Send();
         }
 
         private static void SetState()
