@@ -1,10 +1,10 @@
 ﻿#region
 
 using System;
-using System.IO;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using LeagueSharp.Network.Packets;
 
 #endregion
 
@@ -40,7 +40,6 @@ namespace AutoLantern
             GameObject.OnDelete += OnMinionDeletion;
 
             Game.PrintChat("AutoLantern by Trees loaded.");
-            Game.PrintChat("AutoLantern is currently not working as of 4.21");
             _player = ObjectManager.Player;
         }
 
@@ -86,16 +85,9 @@ namespace AutoLantern
 
         private static void InteractObject(GameObject obj)
         {
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var binaryWriter = new BinaryWriter(memoryStream))
-                {
-                    binaryWriter.Write((byte) 0x3A);
-                    binaryWriter.Write(_player.NetworkId);
-                    binaryWriter.Write(obj.NetworkId);
-                    //Game.SendPacket(memoryStream.ToArray(), PacketChannel.C2S, PacketProtocolFlags.NoFlags);
-                }
-            }
+            var p = new PKT_InteractReq { NetworkId = _player.NetworkId, TargetNetworkId = obj.NetworkId };
+            var gp = new GamePacket(p.Encode());
+            gp.Send();
         }
     }
 }
