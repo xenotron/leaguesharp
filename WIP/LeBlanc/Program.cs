@@ -134,7 +134,7 @@ namespace LeBlanc
 
             Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">LeBlanc the Schemer by </font><font color=\"#0033CC\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
-
+           // Console.Clear();
             Game.OnGameUpdate += Game_OnGameUpdate;
             GameObject.OnCreate += GameObject_OnCreate;
             GameObject.OnDelete += GameObject_OnDelete;
@@ -145,18 +145,20 @@ namespace LeBlanc
 
         private static void Obj_AI_Base_OnProcessSpellCast(GameObject sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (sender == null || !sender.IsValid || !sender.IsMe)
+            var s = sender as Obj_AI_Hero;
+            if (s == null || !s.IsValid || !s.IsMe)
+
             {
                 return;
             }
 
-            if (Target == null || !Target.IsValid)
+            if (args.Target == null || !args.Target.IsValid)
             {
                 Console.WriteLine("NO TARG");
                 return;
             }
 
-            if (Menu.Item("ComboKey").GetValue<bool>())
+            if (Menu.Item("ComboKey").GetValue<KeyBind>().Active)
             {
                 if (args.SData.Name == Q.Instance.Name && R.IsReady())
                 {
@@ -247,17 +249,17 @@ namespace LeBlanc
                 return;
             }
 
-            if (castR && R.IsReady() && UltType() == SpellSlot.Q)
+            /*if (castR && R.IsReady() && UltType() == SpellSlot.Q)
             {
                 Player.Spellbook.CastSpell(SpellSlot.R, Target);
-            }
+            }*/
 
             if (castW && W.CanCast(Target) && GetWState() == 1 && Player.HealthPercentage() >= 20)
             {
                 W.RandomizeCast(Target.Position);
             }
 
-            if (castE && E.IsReady() && E.InRange(Target, 800))
+            if ((!W.IsReady() || GetWState() == 2) && castE && E.IsReady() && E.InRange(Target, 800))
             {
                 E.CastIfHitchanceEquals(Target, GetHitChance("eComboHitChance"));
             }
@@ -356,7 +358,7 @@ namespace LeBlanc
 
         private static SpellSlot UltType()
         {
-            if (R.Instance.Name == null)
+            if (!R.IsReady() || R.Instance.Name == null)
             {
                 return SpellSlot.R;
             }
