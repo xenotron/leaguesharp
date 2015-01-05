@@ -63,7 +63,7 @@ namespace LeBlanc
                     Text.OnEndScene();
                 }
 
-                Drawing.DrawLine(xPosDamage, yPos, xPosDamage, yPos + Height, 2, Color);
+                Drawing.DrawLine(xPosDamage, yPos, xPosDamage, yPos + Height / 2, 2, Color);
 
                 if (Fill)
                 {
@@ -72,7 +72,7 @@ namespace LeBlanc
 
                     for (var i = 0; i < differenceInHP; i++)
                     {
-                        Drawing.DrawLine(pos1 + i, yPos, pos1 + i, yPos + Height, 1, FillColor);
+                        Drawing.DrawLine(pos1 + i, yPos, pos1 + i, yPos + Height / 2, 1, FillColor);
                     }
                 }
             }
