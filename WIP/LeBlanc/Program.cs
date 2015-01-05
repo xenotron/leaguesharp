@@ -174,7 +174,7 @@ namespace LeBlanc
             {
                 if (targ != null && targ.IsValid && args.SData.Name == Q.Instance.Name && R.IsReady())
                 {
-                    Console.WriteLine("DELAY");
+                   // Console.WriteLine("DELAY");
                     Utility.DelayAction.Add(
                         400, () =>
                         {
@@ -189,11 +189,11 @@ namespace LeBlanc
                 }
                 if (args.SData.Name == "LeblancSlide")
                 {
-                    Console.WriteLine("SLIDE");
+                   // Console.WriteLine("SLIDE");
                     if (Target != null && Target.IsValid && Player.Distance(Target) > 400 && R.IsReady() &&
                         UltType() == SpellSlot.W)
                     {
-                        Console.WriteLine("FINISHLCBIOM");
+                    //    Console.WriteLine("FINISHLCBIOM");
                         Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
                         return;
                     }
@@ -308,7 +308,7 @@ namespace LeBlanc
                 return;
             }
 
-            Console.WriteLine("LCOMBO");
+          //  Console.WriteLine("LCOMBO");
             var pos = Player.Position.Extend(Target.Position, W.Range);
             W.Cast(pos);
         }
