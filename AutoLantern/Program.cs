@@ -86,8 +86,7 @@ namespace AutoLantern
         private static void InteractObject(GameObject obj)
         {
             var p = new PKT_InteractReq { NetworkId = _player.NetworkId, TargetNetworkId = obj.NetworkId };
-            var gp = new GamePacket(p.Encode());
-            gp.Send();
+            Game.SendPacket(p.Encode(), PacketChannel.C2S, PacketProtocolFlags.Reliable);
         }
     }
 }
