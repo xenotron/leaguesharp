@@ -127,6 +127,21 @@ namespace LeBlanc
             laneclear.AddItem(
                 new MenuItem("LaneClearActive", "Farm Key").SetValue(new KeyBind((byte) 'V', KeyBindType.Press)));
 
+            var flee = Menu.AddSubMenu(new Menu("Flee Settings", "Flee"));
+            var fleeW = flee.AddSubMenu(new Menu("W", "W"));
+            fleeW.AddItem(new MenuItem("FleeW", "Use W").SetValue(true));
+
+            var fleeE = flee.AddSubMenu(new Menu("E", "E"));
+            fleeE.AddItem(new MenuItem("FleeE", "Use E").SetValue(true));
+            fleeE.AddItem(
+                new MenuItem("eFleesHitChance", "MinHitChance").SetValue(
+                    new StringList(
+                        new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
+
+            var fleeR = flee.AddSubMenu(new Menu("R", "R"));
+            fleeR.AddItem(new MenuItem("FleeRW", "Use W Ult").SetValue(true));
+            flee.AddItem(new MenuItem("FleeKey", "Flee Key").SetValue(new KeyBind((byte) 'T', KeyBindType.Press)));
+
             var clone = Menu.AddSubMenu(new Menu("Clone Settings", "Clone"));
             clone.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
             clone.AddItem(
@@ -287,6 +302,46 @@ namespace LeBlanc
 
         #endregion
 
+        #region Flee
+
+        private static void Flee()
+        {
+            if (!Menu.Item("FleeKey").GetValue<KeyBind>().Active)
+            {
+                return;
+            }
+
+            Orbwalker.ActiveMode = Orbwalking.OrbwalkingMode.None;
+
+            if (W.IsReady() && GetWState() == 1 && Menu.Item("FleeW").GetValue<bool>())
+            {
+                W.Cast(Game.CursorPos);
+                Utility.DelayAction.Add(
+                    (int) (W.Delay * 1000f + 100f), () =>
+                    {
+                        var d = Player.Distance(Game.CursorPos);
+                        Player.IssueOrder(GameObjectOrder.MoveTo, Player.ServerPosition.Extend(Game.CursorPos, d + 250));
+                    });
+                return;
+            }
+
+            if (E.IsReady() && Menu.Item("FleeE").GetValue<bool>() && Target != null && Target.IsValidTarget(E.Range) &&
+                E.GetPrediction(Target).Hitchance >= GetHitChance("eFleeHitChance"))
+            {
+                E.Cast(Target);
+                return;
+            }
+
+            if (R.IsReady() && GetRSlot(SpellSlot.W) && Menu.Item("FleeRW").GetValue<bool>())
+            {
+                //Player.Spellbook.CastSpell(SpellSlot.R, Game.CursorPos);
+                SetRMode(SpellSlot.W);
+                R.Cast(Game.CursorPos);
+            }
+        }
+
+        #endregion
+
         #region Events
 
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
@@ -433,7 +488,7 @@ namespace LeBlanc
                 return;
             }
 
-
+            Flee();
             KSLogic();
             CloneLogic();
             SecondWLogic();
