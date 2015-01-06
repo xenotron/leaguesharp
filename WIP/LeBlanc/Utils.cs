@@ -44,5 +44,10 @@ namespace LeBlanc
             var pos = new Vector2(position.X + rnd.Next(90), position.Y + rnd.Next(90)).To3D();
             spell.Cast(pos);
         }
+
+        public static bool IsGoodCastTarget(this Obj_AI_Hero hero, float range)
+        {
+            return hero != null && hero.IsValidTarget(range);
+        }
     }
 }

@@ -175,6 +175,7 @@ namespace LeBlanc
                 sound.Play();
             }
 
+           // Game.PrintChat(Player.ChampionName);
             Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">LeBlanc the Schemer by </font><font color=\"#0033CC\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
             LeagueSharp.Common.Utils.ClearConsole();
@@ -315,10 +316,11 @@ namespace LeBlanc
 
             if (W.IsReady() && GetWState() == 1 && Menu.Item("FleeW").GetValue<bool>())
             {
-                W.Cast(Game.CursorPos);
+                W.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range + 100));
                 Utility.DelayAction.Add(
                     (int) (W.Delay * 1000f + 100f), () =>
                     {
+                        Game.Say("/l");
                         var d = Player.Distance(Game.CursorPos);
                         Player.IssueOrder(GameObjectOrder.MoveTo, Player.ServerPosition.Extend(Game.CursorPos, d + 250));
                     });
@@ -336,7 +338,7 @@ namespace LeBlanc
             {
                 //Player.Spellbook.CastSpell(SpellSlot.R, Game.CursorPos);
                 SetRMode(SpellSlot.W);
-                R.Cast(Game.CursorPos);
+                R.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range + 100));
             }
         }
 
@@ -493,9 +495,12 @@ namespace LeBlanc
             CloneLogic();
             SecondWLogic();
 
-            Target = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Magical);
+            Target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
+            Target = Target.IsGoodCastTarget(1500)
+                ? Target
+                : TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
-            if (Target == null || !Target.IsValid || !Target.IsValidTarget(2000))
+            if (Target == null || !Target.IsValid)
             {
                 return;
             }
