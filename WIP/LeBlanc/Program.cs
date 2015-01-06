@@ -77,6 +77,8 @@ namespace LeBlanc
 
             var comboW = combo.AddSubMenu(new Menu("W", "W"));
             comboW.AddItem(new MenuItem("ComboW", "Use W").SetValue(true));
+            comboW.AddItem(new MenuItem("Spacer", "Set to 100% To Always W"));
+            comboW.AddItem(new MenuItem("WMinHP", "Min HP To Use W").SetValue(new Slider(20)));
 
             var comboE = combo.AddSubMenu(new Menu("E", "E"));
             comboE.AddItem(new MenuItem("ComboE", "Use E").SetValue(true));
@@ -521,13 +523,13 @@ namespace LeBlanc
 
             if (ItemId.Deathfire_Grasp.IsReady())
             {
-                damage += Player.GetItemDamage(enemy, Damage.DamageItems.Dfg) / 1.2;
+                damage = .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
 
             if (ItemId.Blackfire_Torch.IsReady())
             {
-                damage += Player.GetItemDamage(enemy, Damage.DamageItems.BlackFireTorch) / 1.2;
+                damage = .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
             return (float) damage;
@@ -579,7 +581,8 @@ namespace LeBlanc
                 return;
             }
 
-            if (castW && W.CanCast(Target) && GetWState() == 1 && Player.HealthPercentage() >= 20 && !CastingW)
+            if (castW && W.CanCast(Target) && GetWState() == 1 &&
+                Player.HealthPercentage() >= Menu.Item("WMinHP").GetValue<Slider>().Value)
             {
                 W.RandomizeCast(Target.Position);
                 return;
