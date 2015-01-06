@@ -27,6 +27,7 @@ namespace LeBlanc
         {
             return id.GetItemSlot().CanCast();
         }
+
         private static InventorySlot GetItemSlot(this ItemId id)
         {
             return ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == id);
@@ -43,6 +44,25 @@ namespace LeBlanc
             var rnd = new Random(Environment.TickCount);
             var pos = new Vector2(position.X + rnd.Next(90), position.Y + rnd.Next(90)).To3D();
             spell.Cast(pos);
+        }
+
+        public static void SetSpell(this Spell spell, SpellSlot slot)
+        {
+            switch (slot)
+            {
+                case SpellSlot.Q:
+                    spell = new Spell(spell.Slot, 700);
+                    spell.SetTargetted(.401f, 2000);
+                    return;
+                case SpellSlot.W:
+                    spell = new Spell(spell.Slot, 600);
+                    spell.SetSkillshot(.5f, 100, 2000, false, SkillshotType.SkillshotCircle);
+                    return;
+                case SpellSlot.E:
+                    spell = new Spell(spell.Slot, 970);
+                    spell.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
+                    return;
+            }
         }
 
         public static bool IsGoodCastTarget(this Obj_AI_Hero hero, float range)

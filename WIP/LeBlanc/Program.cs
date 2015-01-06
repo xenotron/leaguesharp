@@ -66,7 +66,7 @@ namespace LeBlanc
             var combo = new Menu("Combo Settings", "Combo");
 
             var gapclose = combo.AddSubMenu(new Menu("GapClose", "Gap Close Combo"));
-            gapclose.AddItem(new MenuItem("Spacer", "This doesn't work yet"));
+            //gapclose.AddItem(new MenuItem("Spacer", "This doesn't work yet"));
             //gapclose.AddItem(new MenuItem("GapCloseEnabled", "Use GapClose Combo").SetValue(true));
             //replace with damage calcs
             gapclose.AddItem(new MenuItem("TargetHP", "At Target HP %").SetValue(new Slider(40)));
@@ -116,6 +116,7 @@ namespace LeBlanc
             /* var harassR = harass.AddSubMenu(new Menu("R", "R"));
             harassR.AddItem(new MenuItem("HarassR", "Use R").SetValue(true));
             */
+
             harass.AddItem(
                 new MenuItem("SecondW", "Second W Setting").SetValue(
                     new StringList(new[] { "Manual", "Auto", "After E" })));
@@ -175,7 +176,6 @@ namespace LeBlanc
                 sound.Play();
             }
 
-           // Game.PrintChat(Player.ChampionName);
             Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">LeBlanc the Schemer by </font><font color=\"#0033CC\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
             LeagueSharp.Common.Utils.ClearConsole();
@@ -195,6 +195,11 @@ namespace LeBlanc
 
         private static void Harass()
         {
+            if (!Menu.Item("Harass").GetValue<KeyBind>().Active)
+            {
+                return;
+            }
+
             var castQ = Menu.Item("HarassQ").GetValue<bool>();
             var castW = Menu.Item("HarassW").GetValue<bool>();
             var castE = Menu.Item("HarassE").GetValue<bool>();
@@ -247,7 +252,8 @@ namespace LeBlanc
 
         private static void LaneClear()
         {
-            if (!Q.IsReady() || !Menu.SubMenu("LaneClear").Item("LaneClearQ").GetValue<bool>() ||
+            if (!Menu.Item("LaneClear").GetValue<KeyBind>().Active || !Q.IsReady() ||
+                !Menu.SubMenu("LaneClear").Item("LaneClearQ").GetValue<bool>() ||
                 Player.ManaPercentage() < Menu.SubMenu("LaneClear").Item("LaneClearQPercent").GetValue<Slider>().Value)
             {
                 return;
@@ -271,7 +277,6 @@ namespace LeBlanc
 
         private static void CloneLogic()
         {
-            //var Clone = Player.Pet as Obj_AI_Base;
             if (Clone == null || !Clone.IsValid || !Menu.SubMenu("Clone").Item("Enabled").GetValue<bool>())
             {
                 return;
@@ -296,7 +301,14 @@ namespace LeBlanc
                     }
                     break;
                 case 2: //away from player
-                    Clone.IssueOrder(GameObjectOrder.MovePet, Player.Position.Extend(Clone.Position, 200));
+                    Utility.DelayAction.Add(
+                        100,
+                        () =>
+                        {
+                            Clone.IssueOrder(
+                                GameObjectOrder.MovePet,
+                                (Clone.Position + 500 * ((Clone.Position - Player.Position).Normalized())));
+                        });
                     break;
             }
         }
@@ -336,8 +348,7 @@ namespace LeBlanc
 
             if (R.IsReady() && GetRSlot(SpellSlot.W) && Menu.Item("FleeRW").GetValue<bool>())
             {
-                //Player.Spellbook.CastSpell(SpellSlot.R, Game.CursorPos);
-                SetRMode(SpellSlot.W);
+                R.SetSpell(SpellSlot.W);
                 R.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range + 100));
             }
         }
@@ -382,13 +393,8 @@ namespace LeBlanc
         private static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
             var unit = gapcloser.Sender as Obj_AI_Hero;
-            if (!Menu.Item("Interrupt").GetValue<bool>() || unit == null || !unit.IsValid ||
-                !unit.IsValidTarget(E.Range))
-            {
-                return;
-            }
 
-            if (!E.IsReady())
+            if (!Menu.Item("Interrupt").GetValue<bool>() || !unit.IsGoodCastTarget(E.Range) || !E.IsReady())
             {
                 return;
             }
@@ -400,7 +406,7 @@ namespace LeBlanc
                 {
                     if (R.IsReady() && GetRSlot(SpellSlot.E))
                     {
-                        SetRMode(SpellSlot.E);
+                        R.SetSpell(SpellSlot.E);
                         R.CastIfHitchanceEquals(unit, HitChance.Medium);
                     }
                 });
@@ -408,13 +414,10 @@ namespace LeBlanc
 
         private static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
         {
-            if (!Menu.Item("Interrupt").GetValue<bool>() || unit == null || !unit.IsValid ||
-                !unit.IsValidTarget(E.Range) || spell.DangerLevel < InterruptableDangerLevel.High)
-            {
-                return;
-            }
+            var interruptunit = unit as Obj_AI_Hero;
 
-            if (!E.IsReady())
+            if (!Menu.Item("Interrupt").GetValue<bool>() || !interruptunit.IsGoodCastTarget(E.Range) ||
+                spell.DangerLevel < InterruptableDangerLevel.High || !E.IsReady())
             {
                 return;
             }
@@ -426,8 +429,8 @@ namespace LeBlanc
                 {
                     if (R.IsReady() && GetRSlot(SpellSlot.E))
                     {
-                        SetRMode(SpellSlot.E);
-                        R.CastIfHitchanceEquals(unit, HitChance.High);
+                        R.SetSpell(SpellSlot.E);
+                        R.CastIfHitchanceEquals(interruptunit, HitChance.High);
                     }
                 });
         }
@@ -505,22 +508,9 @@ namespace LeBlanc
                 return;
             }
 
-            if (Menu.SubMenu("Combo").Item("ComboKey").GetValue<KeyBind>().Active)
-            {
-                Comboes();
-                return;
-            }
-
-            if (Menu.Item("Harass").GetValue<KeyBind>().Active)
-            {
-                Harass();
-                return;
-            }
-
-            if (Menu.Item("LaneClear").GetValue<KeyBind>().Active)
-            {
-                LaneClear();
-            }
+            LaneClear();
+            Comboes();
+            Harass();
         }
 
         #endregion
@@ -601,6 +591,11 @@ namespace LeBlanc
 
         private static void Comboes()
         {
+            if (!Menu.SubMenu("Combo").Item("ComboKey").GetValue<KeyBind>().Active)
+            {
+                return;
+            }
+
             if (Target.IsValidTarget(Q.Range))
             {
                 Combo();
@@ -723,25 +718,6 @@ namespace LeBlanc
             }
         }
 
-        private static void SetRMode(SpellSlot slot)
-        {
-            switch (slot)
-            {
-                case SpellSlot.Q:
-                    R.Range = 700;
-                    R.SetTargetted(.401f, 2000);
-                    return;
-                case SpellSlot.W:
-                    R = new Spell(SpellSlot.R, 600);
-                    R.SetSkillshot(.5f, 100, 2000, false, SkillshotType.SkillshotCircle);
-                    return;
-                case SpellSlot.E:
-                    R = new Spell(SpellSlot.R, 970);
-                    R.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
-                    return;
-            }
-        }
-
         private static HitChance GetHitChance(string name)
         {
             var hc = Menu.Item(name).GetValue<StringList>();
@@ -814,7 +790,7 @@ namespace LeBlanc
 
             if (ult)
             {
-                SetRMode(SpellSlot.Q);
+                R.SetSpell(SpellSlot.Q);
                 R.Cast(unit);
                 return;
             }
@@ -836,7 +812,7 @@ namespace LeBlanc
 
             if (ult)
             {
-                SetRMode(SpellSlot.W);
+                R.SetSpell(SpellSlot.W);
                 R.Cast(unit);
                 return;
             }
@@ -857,7 +833,7 @@ namespace LeBlanc
 
             if (ult)
             {
-                SetRMode(SpellSlot.E);
+                R.SetSpell(SpellSlot.E);
                 R.Cast(unit);
                 return;
             }
