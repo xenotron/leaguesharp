@@ -571,11 +571,6 @@ namespace LeBlanc
                 damage += Player.GetSpellDamage(enemy, SpellSlot.W);
             }
 
-            if (Ignite.IsReady())
-            {
-                damage += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
-            }
-
             if (ItemId.Deathfire_Grasp.IsReady())
             {
                 damage = .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
@@ -585,6 +580,11 @@ namespace LeBlanc
             if (ItemId.Blackfire_Torch.IsReady())
             {
                 damage = .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
+            }
+
+            if (Ignite.IsReady())
+            {
+                damage += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
             }
 
             return (float) damage;
