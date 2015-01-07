@@ -620,14 +620,15 @@ namespace LeBlanc
                 }
             }
 
-            if (castQ && Q.CanCast(Target))
-            {
-                Q.Cast(Target);
-                return;
-            }
 
             if (castR && GetRSlot(SpellSlot.Q) && Player.Spellbook.CastSpell(SpellSlot.R, Target))
             {
+                return;
+            }
+
+            if (castQ && Q.CanCast(Target))
+            {
+                Q.Cast(Target);
                 return;
             }
 
