@@ -200,9 +200,9 @@ namespace LeBlanc
                 return;
             }
 
-            var castQ = Menu.Item("HarassQ").GetValue<bool>();
-            var castW = Menu.Item("HarassW").GetValue<bool>();
-            var castE = Menu.Item("HarassE").GetValue<bool>();
+            var castQ = Menu.Item("HarassQ").GetValue<bool>() && Q.IsReady();
+            var castW = Menu.Item("HarassW").GetValue<bool>() && W.IsReady();
+            var castE = Menu.Item("HarassE").GetValue<bool>() && E.IsReady();
             //  var castR = Menu.Item("HarassR").GetValue<bool>();
 
             if (castQ && Q.CanCast(Target))
@@ -211,34 +211,28 @@ namespace LeBlanc
                 return;
             }
 
-            if (castW && W.IsReady() && Player.HealthPercentage() > 20)
+            if (castW && Player.HealthPercentage() > 20 && GetWState() == 1 && W.InRange(Target, Q.Range))
             {
-                var wState = GetWState();
-
-                if (wState == 1 && W.InRange(Target))
-                {
-                    W.Cast(Target);
-                    return;
-                }
-
-                if (wState == 2)
-                {
-                    switch (GetWMode())
-                    {
-                        case 1:
-                            Player.Spellbook.CastSpell(SpellSlot.W);
-                            break;
-                        case 2:
-                            if (Target.Buffs.Any(buff => buff.Name.ToLower().Contains("leblancsoulshackle")))
-                            {
-                                Player.Spellbook.CastSpell(SpellSlot.W);
-                                return;
-                            }
-                            break;
-                    }
-                }
+                W.Cast(Target);
+                return;
             }
 
+            if (GetWState() == 2 && Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.None)
+            {
+                switch (GetWMode())
+                {
+                    case 1:
+                        Player.Spellbook.CastSpell(SpellSlot.W);
+                        break;
+                    case 2:
+                        if (Target.Buffs.Any(buff => buff.Name.ToLower().Contains("leblancsoulshackle")))
+                        {
+                            Player.Spellbook.CastSpell(SpellSlot.W);
+                            return;
+                        }
+                        break;
+                }
+            }
 
             if (castE && E.CanCast(Target))
             {
@@ -346,7 +340,7 @@ namespace LeBlanc
                 return;
             }
 
-            if (R.IsReady() && GetRSlot(SpellSlot.W) && Menu.Item("FleeRW").GetValue<bool>())
+            if (R.IsReady() && GetWState() == 2 && GetRSlot(SpellSlot.W) && Menu.Item("FleeRW").GetValue<bool>())
             {
                 R.SetSpell(SpellSlot.W);
                 R.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range + 100));
@@ -611,10 +605,11 @@ namespace LeBlanc
 
         private static void Combo()
         {
-            var castQ = Menu.Item("ComboQ").GetValue<bool>();
-            var castW = Menu.Item("ComboW").GetValue<bool>();
-            var castE = Menu.Item("ComboE").GetValue<bool>();
-            var castR = Menu.Item("ComboR").GetValue<bool>();
+            var castQ = Menu.Item("ComboQ").GetValue<bool>() && Q.IsReady();
+            var castW = Menu.Item("ComboW").GetValue<bool>() && W.IsReady();
+            var castE = Menu.Item("ComboE").GetValue<bool>() && E.IsReady();
+            var castR = Menu.Item("ComboR").GetValue<bool>() && R.IsReady();
+
             var castItems = Menu.Item("MiscItems").GetValue<bool>();
 
             if (castItems && Player.Distance(Target) <= 750 && Q.IsReady() && W.IsReady() && E.IsReady() && R.IsReady())
@@ -631,12 +626,12 @@ namespace LeBlanc
                 return;
             }
 
-            if (castR && R.IsReady() && GetRSlot(SpellSlot.Q) && Player.Spellbook.CastSpell(SpellSlot.R, Target))
+            if (castR && GetRSlot(SpellSlot.Q) && Player.Spellbook.CastSpell(SpellSlot.R, Target))
             {
                 return;
             }
 
-            if (castW && W.CanCast(Target) && GetWState() == 1 &&
+            if (castW && W.InRange(Target, Q.Range) && GetWState() == 1 &&
                 Player.HealthPercentage() >= Menu.Item("WMinHP").GetValue<Slider>().Value)
             {
                 W.RandomizeCast(Target.Position);
