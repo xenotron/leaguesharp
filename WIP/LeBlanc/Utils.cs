@@ -20,13 +20,14 @@ namespace LeBlanc
 
         private static bool _cast(this InventorySlot slot, GameObject target)
         {
-            return slot.SpellSlot.IsReady() && ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, target);
+            return slot.IsValidSlot() && slot.SpellSlot.IsReady() &&
+                   ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, target);
         }
 
         public static bool IsReady(this ItemId id)
         {
             var item = id.GetItemSlot();
-            return item != null && item.SpellSlot != SpellSlot.Unknown && item.SpellSlot.IsReady();
+            return item.IsValidSlot() && item.SpellSlot.IsReady();
         }
 
         private static InventorySlot GetItemSlot(this ItemId id)

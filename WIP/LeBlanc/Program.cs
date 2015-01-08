@@ -28,6 +28,7 @@ namespace LeBlanc
 
         public static void Main(string[] args)
         {
+            LeagueSharp.Common.Utils.ClearConsole();
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
         }
 
@@ -35,7 +36,7 @@ namespace LeBlanc
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            if (Player.ChampionName.ToLower() != "leblanc")
+            if (!Player.ChampionName.Equals("Leblanc"))
             {
                 return;
             }
@@ -185,7 +186,6 @@ namespace LeBlanc
 
             Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">LeBlanc the Schemer by </font><font color=\"#0033CC\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
-            LeagueSharp.Common.Utils.ClearConsole();
 
             Game.OnGameUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
@@ -744,7 +744,7 @@ namespace LeBlanc
                     .FirstOrDefault(
                         obj => obj.IsValidTarget(Q.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.Q));
 
-            if (unit == null || !unit.IsValid)
+            if (!unit.IsValidTarget(Q.Range))
             {
                 return;
             }
@@ -764,7 +764,7 @@ namespace LeBlanc
                     .FirstOrDefault(
                         obj => obj.IsValidTarget(W.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.W));
 
-            if (unit == null || !unit.IsValid)
+            if (!unit.IsValidTarget(W.Range))
             {
                 return;
             }
@@ -785,7 +785,7 @@ namespace LeBlanc
                     .FirstOrDefault(
                         obj => obj.IsValidTarget(E.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.E));
 
-            if (unit == null || !unit.IsValid || E.GetPrediction(unit).Hitchance < HitChance.High)
+            if (!unit.IsValidTarget(E.Range) || E.GetPrediction(unit).Hitchance < HitChance.High)
             {
                 return;
             }
@@ -835,7 +835,7 @@ namespace LeBlanc
                             obj.IsValidTarget(600) &&
                             obj.Health < Player.GetSummonerSpellDamage(obj, Damage.SummonerSpell.Ignite));
 
-            if (unit != null && unit.IsValid)
+            if (unit.IsValidTarget(600))
             {
                 Player.Spellbook.CastSpell(Ignite.Slot, unit);
             }
