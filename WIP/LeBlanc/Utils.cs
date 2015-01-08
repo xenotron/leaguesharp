@@ -21,25 +21,24 @@ namespace LeBlanc
         private static bool _cast(this ItemData.Item item, GameObject target)
         {
             var slot = item.GetItemSlot();
-            return slot.IsReady() &&
+            return slot != null && slot.SpellSlot != SpellSlot.Unknown && slot.SpellSlot.IsReady() &&
                    ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, target);
         }
 
         public static bool IsReady(this InventorySlot slot)
         {
-            return slot.IsValidSlot() && slot.IsReady();
+            return slot != null && slot.IsValidSlot() && slot.IsReady();
         }
 
         public static bool IsReady(this ItemData.Item item)
         {
             var slot = item.GetItemSlot();
-            return slot.IsValidSlot() && slot.SpellSlot.IsReady();
+            return slot != null && slot.IsValidSlot() && slot.SpellSlot.IsReady();
         }
-
 
         private static InventorySlot GetItemSlot(this ItemData.Item item)
         {
-            return ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == (ItemId)item.Id);
+            return ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == (ItemId) item.Id);
         }
 
         public static void RandomizeCast(this Spell spell, Vector3 position)

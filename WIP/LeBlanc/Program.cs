@@ -300,7 +300,7 @@ namespace LeBlanc
                     Utility.DelayAction.Add(200, () => { pet.IssueOrder(GameObjectOrder.MovePet, pos); });
                     break;
                 case 1: //toward target
-                    if (pet.CanAttack && !pet.IsWindingUp && Target.IsValidTarget(800))// && !pet.IsAutoAttacking)
+                    if (pet.CanAttack && !pet.IsWindingUp && Target.IsValidTarget(800)) // && !pet.IsAutoAttacking)
                     {
                         pet.IssueOrder(GameObjectOrder.AutoAttackPet, Target);
                     }
@@ -489,7 +489,7 @@ namespace LeBlanc
             Flee();
             KSLogic();
             CloneLogic();
-            //SecondWLogic();
+            SecondWLogic();
 
             Target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
             Target = Target.IsGoodCastTarget(1500)
@@ -610,7 +610,7 @@ namespace LeBlanc
                 return;
             }
 
-            Console.WriteLine("COMBO");
+//            Console.WriteLine("COMBO");
             if (Target.IsValidTarget(Q.Range))
             {
                 Combo();
@@ -626,8 +626,17 @@ namespace LeBlanc
 
         #region Items
 
-        private static void Items()
+        private static void Items() {}
+
+        #endregion
+
+        private static void Combo()
         {
+            var castQ = Menu.Item("ComboQ").GetValue<bool>() && Q.IsReady();
+            var castW = Menu.Item("ComboW").GetValue<bool>() && W.IsReady();
+            var castE = Menu.Item("ComboE").GetValue<bool>() && E.IsReady();
+            var castR = Menu.Item("ComboR").GetValue<bool>() && R.IsReady(SpellSlot.Q);
+
             var castItems = Menu.Item("MiscItems").GetValue<bool>();
 
             if (!castItems)
@@ -647,18 +656,7 @@ namespace LeBlanc
             {
                 ItemData.Frost_Queens_Claim.Cast(Target);
             }
-        }
 
-        #endregion
-
-        private static void Combo()
-        {
-            var castQ = Menu.Item("ComboQ").GetValue<bool>() && Q.IsReady();
-            var castW = Menu.Item("ComboW").GetValue<bool>() && W.IsReady();
-            var castE = Menu.Item("ComboE").GetValue<bool>() && E.IsReady();
-            var castR = Menu.Item("ComboR").GetValue<bool>() && R.IsReady(SpellSlot.Q);
-
-            Items();
 
             if (castR && R.Cast(SpellSlot.Q, Target).IsCast())
             {
@@ -761,7 +759,7 @@ namespace LeBlanc
         {
             KSIgnite();
 
-            if (!Menu.Item("MiscKS").GetValue<bool>())
+            if (!Menu.Item("KS").GetValue<bool>())
             {
                 return;
             }
@@ -870,7 +868,7 @@ namespace LeBlanc
 
         private static void KSIgnite()
         {
-            if (!Ignite.IsReady())
+            if (Ignite == null || Ignite.Slot == SpellSlot.Unknown || !Ignite.Slot.IsReady())
             {
                 return;
             }
