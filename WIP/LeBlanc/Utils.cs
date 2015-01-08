@@ -25,7 +25,8 @@ namespace LeBlanc
 
         public static bool IsReady(this ItemId id)
         {
-            return id.GetItemSlot().SpellSlot.IsReady();
+            var item = id.GetItemSlot();
+            return item != null && item.SpellSlot != SpellSlot.Unknown && item.SpellSlot.IsReady();
         }
 
         private static InventorySlot GetItemSlot(this ItemId id)

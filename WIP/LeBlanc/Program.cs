@@ -455,24 +455,20 @@ namespace LeBlanc
             var harassMode = Menu.Item("Harass").GetValue<KeyBind>().Active;
             var isQSpell = args.SData.Name == Q.Instance.Name;
             var isWSpell = args.SData.Name == "LeblancSlide";
+            var castR = Target.IsGoodCastTarget(400) && R.IsReady(SpellSlot.W);
 
             if (comboMode)
             {
                 if (isQSpell && R.IsReady() && targ.IsValidTarget(Q.Range))
                 {
                     Utility.DelayAction.Add(150, () => { R.Cast(SpellSlot.W, targ); });
-
                     return;
                 }
 
-                if (isWSpell)
+                if (isWSpell && castR)
                 {
-                    if (Target.IsGoodCastTarget(400) && R.IsReady(SpellSlot.W) && R.Cast(SpellSlot.W, Target).IsCast())
-                    {
-                        return;
-                    }
-
-                    Combo();
+                    R.Cast(SpellSlot.W, Target).IsCast();
+                    return;
                 }
             }
 
@@ -587,11 +583,12 @@ namespace LeBlanc
 
         private static void Comboes()
         {
-            if (!Menu.SubMenu("Combo").Item("ComboKey").GetValue<KeyBind>().Active)
+            if (!Menu.Item("ComboKey").GetValue<KeyBind>().Active)
             {
                 return;
             }
 
+            Console.WriteLine("COMBO");
             if (Target.IsValidTarget(Q.Range))
             {
                 Combo();
