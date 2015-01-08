@@ -8,31 +8,38 @@ namespace LeBlanc
 {
     internal static class Utils
     {
-        public static bool Cast(this ItemId id)
+        public static bool Cast(this ItemData.Item item)
         {
-            return id.GetItemSlot()._cast(ObjectManager.Player);
+            return item._cast(ObjectManager.Player);
         }
 
-        public static bool Cast(this ItemId id, Obj_AI_Base target)
+        public static bool Cast(this ItemData.Item item, Obj_AI_Base target)
         {
-            return id.GetItemSlot()._cast(target);
+            return item._cast(target);
         }
 
-        private static bool _cast(this InventorySlot slot, GameObject target)
+        private static bool _cast(this ItemData.Item item, GameObject target)
         {
-            return slot.IsValidSlot() && slot.SpellSlot.IsReady() &&
+            var slot = item.GetItemSlot();
+            return slot.IsReady() &&
                    ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, target);
         }
 
-        public static bool IsReady(this ItemId id)
+        public static bool IsReady(this InventorySlot slot)
         {
-            var item = id.GetItemSlot();
-            return item.IsValidSlot() && item.SpellSlot.IsReady();
+            return slot.IsValidSlot() && slot.IsReady();
         }
 
-        private static InventorySlot GetItemSlot(this ItemId id)
+        public static bool IsReady(this ItemData.Item item)
         {
-            return ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == id);
+            var slot = item.GetItemSlot();
+            return slot.IsValidSlot() && slot.SpellSlot.IsReady();
+        }
+
+
+        private static InventorySlot GetItemSlot(this ItemData.Item item)
+        {
+            return ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == (ItemId)item.Id);
         }
 
         public static void RandomizeCast(this Spell spell, Vector3 position)

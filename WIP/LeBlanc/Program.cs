@@ -164,6 +164,7 @@ namespace LeBlanc
 
             var misc = Menu.AddSubMenu(new Menu("Misc Settings", "Misc"));
             misc.AddItem(new MenuItem("MiscItems", "Use Items (DFG)").SetValue(true));
+            misc.AddItem(new MenuItem("KS", "KillSteal with Spells").SetValue(true));
             misc.AddItem(new MenuItem("MiscW2", "Use Second W").SetValue(true));
             misc.AddItem(new MenuItem("MiscW2HP", "HP% to Use Second W").SetValue(new Slider(20)));
             misc.AddItem(new MenuItem("Interrupt", "Interrupt Spells").SetValue(true));
@@ -299,7 +300,7 @@ namespace LeBlanc
                     Utility.DelayAction.Add(200, () => { pet.IssueOrder(GameObjectOrder.MovePet, pos); });
                     break;
                 case 1: //toward target
-                    if (pet.CanAttack && !pet.IsWindingUp && Target.IsValidTarget(800) && !pet.IsAutoAttacking)
+                    if (pet.CanAttack && !pet.IsWindingUp && Target.IsValidTarget(800))// && !pet.IsAutoAttacking)
                     {
                         pet.IssueOrder(GameObjectOrder.AutoAttackPet, Target);
                     }
@@ -531,20 +532,37 @@ namespace LeBlanc
             if (Q.IsReady())
             {
                 var d = Player.GetSpellDamage(enemy, SpellSlot.Q);
-                if (enemy.HasBuff("LeblancChaosOrb", true))
+
+                if (enemy.HasBuff("LeblancChaosOrb", true) || enemy.HasBuff("LeblancChaosOrbM", true))
                 {
                     d *= 2;
                 }
+
                 damage += d;
             }
 
             if (R.IsReady())
             {
-                var d = Player.GetSpellDamage(enemy, SpellSlot.Q);
-                if (enemy.HasBuff("LeblancChaosOrb", true))
+                var d = 0d;
+
+                switch (R.GetSpellSlot())
+                {
+                    case SpellSlot.Q:
+                        d = Player.GetSpellDamage(enemy, SpellSlot.Q);
+                        break;
+                    case SpellSlot.W:
+                        d = Player.GetSpellDamage(enemy, SpellSlot.W);
+                        break;
+                    case SpellSlot.E:
+                        d = Player.GetSpellDamage(enemy, SpellSlot.E);
+                        break;
+                }
+
+                if (enemy.HasBuff("LeblancChaosOrb", true) || enemy.HasBuff("LeblancChaosOrbM", true))
                 {
                     d *= 2;
                 }
+
                 damage += d;
             }
 
@@ -558,15 +576,19 @@ namespace LeBlanc
                 damage += Player.GetSpellDamage(enemy, SpellSlot.W);
             }
 
-            if (ItemId.Deathfire_Grasp.IsReady())
+            if (ItemData.Deathfire_Grasp.IsReady())
             {
                 damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
-
-            if (ItemId.Blackfire_Torch.IsReady())
+            if (ItemData.Blackfire_Torch.IsReady())
             {
-                damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
+                damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.BlackFireTorch);
+            }
+
+            if (ItemData.Frost_Queens_Claim.IsReady())
+            {
+                damage += Player.GetItemDamage(enemy, Damage.DamageItems.FrostQueenClaim);
             }
 
             if (Ignite.IsReady())
@@ -602,6 +624,33 @@ namespace LeBlanc
             }
         }
 
+        #region Items
+
+        private static void Items()
+        {
+            var castItems = Menu.Item("MiscItems").GetValue<bool>();
+
+            if (!castItems)
+            {
+                return;
+            }
+
+            var spellsUp = Q.IsReady() && W.IsReady() && E.IsReady() && R.IsReady();
+            var d = Player.Distance(Target);
+
+            if (d <= 750 && spellsUp && (ItemData.Deathfire_Grasp.Cast(Target) || ItemData.Blackfire_Torch.Cast(Target)))
+            {
+                return;
+            }
+
+            if (d < ItemData.Frost_Queens_Claim.Range)
+            {
+                ItemData.Frost_Queens_Claim.Cast(Target);
+            }
+        }
+
+        #endregion
+
         private static void Combo()
         {
             var castQ = Menu.Item("ComboQ").GetValue<bool>() && Q.IsReady();
@@ -609,15 +658,7 @@ namespace LeBlanc
             var castE = Menu.Item("ComboE").GetValue<bool>() && E.IsReady();
             var castR = Menu.Item("ComboR").GetValue<bool>() && R.IsReady(SpellSlot.Q);
 
-            var castItems = Menu.Item("MiscItems").GetValue<bool>();
-
-            if (castItems && Player.Distance(Target) <= 750 && Q.IsReady() && W.IsReady() && E.IsReady() && R.IsReady())
-            {
-                if (ItemId.Deathfire_Grasp.Cast(Target) || ItemId.Blackfire_Torch.Cast(Target))
-                {
-                    return;
-                }
-            }
+            Items();
 
             if (castR && R.Cast(SpellSlot.Q, Target).IsCast())
             {
@@ -719,6 +760,12 @@ namespace LeBlanc
         private static void KSLogic()
         {
             KSIgnite();
+
+            if (!Menu.Item("MiscKS").GetValue<bool>())
+            {
+                return;
+            }
+
             KSR();
 
             if (Q.IsReady())
