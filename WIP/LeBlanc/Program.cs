@@ -560,13 +560,13 @@ namespace LeBlanc
 
             if (ItemId.Deathfire_Grasp.IsReady())
             {
-                damage = .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
+                damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
 
             if (ItemId.Blackfire_Torch.IsReady())
             {
-                damage = .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
+                damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
             if (Ignite.IsReady())
