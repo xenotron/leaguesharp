@@ -11,14 +11,6 @@ namespace TreeSharp
 {
     internal class Program
     {
-        public static List<String> WardSpells = new List<string>
-        {
-            "SightWard",
-            "VisionWard",
-            "TrinketTotemLvl1",
-            "ItemGhostWard"
-        };
-
         public static List<Obj_AI_Base> WardList = new List<Obj_AI_Base>();
         public static Render.Text WardText;
 
@@ -31,19 +23,41 @@ namespace TreeSharp
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            WardText = new Render.Text("Ward Count: 0", 200, 200, 24, SharpDX.Color.Red);
+            WardText = new Render.Text("Ward Count: 0/3", Drawing.Width/2 + 500, Drawing.Height - 50, 22, SharpDX.Color.Yellow);
             WardText.Add();
 
             OnWardSound = new SoundObject(Resources.OnWard);
-            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             Game.OnGameUpdate += Game_OnGameUpdate;
+            GameObject.OnCreate += GameObject_OnCreate;
             //Game.OnGameNotifyEvent += Game_OnGameNotifyEvent;
+        }
+
+        static void GameObject_OnCreate(GameObject sender, EventArgs args)
+        {
+            var unit = sender as Obj_AI_Minion;
+
+            if (unit == null || !unit.IsValid)
+            {
+                return;
+            }
+
+            if (unit.Name == "VisionWard" && unit.BaseSkinName == "sightward")
+            {
+                WardList.Add(unit);
+            }
+
+            if (unit.Name.ToLower().Contains("ward") && sender.IsAlly && ObjectManager.Player.Distance(sender.Position) < 500)
+            {
+                OnWardSound.Play();
+            }
+
         }
 
         static void Game_OnGameUpdate(EventArgs args)
         {
             var wardCount = WardList.Count(w => w.IsValid && !w.IsDead && w.Health > 0 && w.IsVisible);
-            WardText.text = "Ward Count: " + wardCount;
+            WardText.text = "Ward Count: " + wardCount + "/3";
+            WardText.Color = wardCount == 3 ? SharpDX.Color.Red : SharpDX.Color.Yellow;
         }
 
         private static void Game_OnGameNotifyEvent(GameNotifyEventArgs args)
@@ -64,24 +78,9 @@ namespace TreeSharp
             }
         }
 
-        private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
-        {
-            if (sender == null || !sender.IsValid || !sender.IsMe)
-            {
-                return;
-            }
-
-            if (WardSpells.Contains(args.SData.Name))
-            {
-                OnWardSound.Play();
-            }
-
-            if (args.SData.Name.Equals("TrinketTotemLvl1"))
-            {
-                WardList.Add(sender);
-            }
+    
         }
-    }
+    
 
     internal class SoundObject
     {
