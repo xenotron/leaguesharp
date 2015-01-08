@@ -82,7 +82,7 @@ namespace LeBlanc
 
             var comboW = combo.AddSubMenu(new Menu("W", "W"));
             comboW.AddItem(new MenuItem("ComboW", "Use W").SetValue(true));
-            comboW.AddItem(new MenuItem("Spacer", "Set to 100% To Always W"));
+            comboW.AddItem(new MenuItem("Spacer", "Set to 0% To Always W"));
             comboW.AddItem(new MenuItem("WMinHP", "Min HP To Use W").SetValue(new Slider(20)));
 
             var comboE = combo.AddSubMenu(new Menu("E", "E"));
