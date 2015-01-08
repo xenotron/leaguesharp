@@ -20,12 +20,12 @@ namespace LeBlanc
 
         private static bool _cast(this InventorySlot slot, GameObject target)
         {
-            return slot.CanCast() && ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, target);
+            return slot.SpellSlot.IsReady() && ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, target);
         }
 
         public static bool IsReady(this ItemId id)
         {
-            return id.GetItemSlot().CanCast();
+            return id.GetItemSlot().SpellSlot.IsReady();
         }
 
         private static InventorySlot GetItemSlot(this ItemId id)
@@ -33,17 +33,37 @@ namespace LeBlanc
             return ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == id);
         }
 
-        public static bool CanCast(this InventorySlot slot)
-        {
-            return slot != null && slot.SpellSlot != SpellSlot.Unknown &&
-                   ObjectManager.Player.Spellbook.GetSpell(slot.SpellSlot).IsReady();
-        }
-
         public static void RandomizeCast(this Spell spell, Vector3 position)
         {
             var rnd = new Random(Environment.TickCount);
-            var pos = new Vector2(position.X + rnd.Next(90), position.Y + rnd.Next(90)).To3D();
-            spell.Cast(pos);
+            var randomVector = new Vector2(rnd.Next(75), rnd.Next(75)).To3D();
+            spell.Cast(position + randomVector);
+        }
+
+        public static bool GetState(this Spell spell, int state)
+        {
+            return spell.Instance.ToggleState == state;
+        }
+
+        public static SpellSlot GetSpellSlot(this Spell spell)
+        {
+            if (!spell.IsReady() || spell.Instance.Name == null)
+            {
+                return SpellSlot.R;
+            }
+
+            //leblancslidereturnm
+            switch (spell.Instance.Name)
+            {
+                case "LeblancChaosOrbM":
+                    return SpellSlot.Q;
+                case "LeblancSlideM":
+                    return SpellSlot.W;
+                case "LeblancSoulShackleM":
+                    return SpellSlot.E;
+                default:
+                    return SpellSlot.R;
+            }
         }
 
         public static void SetSpell(this Spell spell, SpellSlot slot)
@@ -63,6 +83,39 @@ namespace LeBlanc
                     spell.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
                     return;
             }
+        }
+
+        public static int GetToggleState(this Spell spell)
+        {
+            return spell.Instance.ToggleState;
+        }
+
+        public static Spell.CastStates Cast(this Spell spell, SpellSlot slot, Obj_AI_Base unit)
+        {
+            spell.SetSpell(slot);
+            return spell.Cast(unit);
+        }
+
+        public static void Cast(this Spell spell, SpellSlot slot, Vector3 position)
+        {
+            spell.SetSpell(slot);
+            spell.Cast(position);
+        }
+
+        public static bool CastIfHitchanceEquals(this Spell spell, SpellSlot slot, Obj_AI_Base unit, HitChance hitchance)
+        {
+            spell.SetSpell(slot);
+            return spell.CastIfHitchanceEquals(unit, hitchance);
+        }
+
+        public static bool IsCast(this Spell.CastStates state)
+        {
+            return state == Spell.CastStates.SuccessfullyCasted;
+        }
+
+        public static bool IsReady(this Spell spell, SpellSlot slot)
+        {
+            return spell.IsReady() && spell.GetSpellSlot() == slot;
         }
 
         public static bool IsGoodCastTarget(this Obj_AI_Hero hero, float range)

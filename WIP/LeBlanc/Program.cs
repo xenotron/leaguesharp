@@ -21,11 +21,10 @@ namespace LeBlanc
         public static Orbwalking.Orbwalker Orbwalker;
         public static Obj_AI_Hero Target;
         public static Obj_AI_Hero Player = ObjectManager.Player;
-        public static bool LCombo;
-        public static Obj_AI_Base Clone;
         public static SpellDataInst Ignite;
         public static Vector3 WPosition;
-        public static bool CastingW;
+        public static float LastTroll;
+        public static readonly string LeBlancWObject = "LeBlanc_Base_W_return_indicator.troy";
 
         public static void Main(string[] args)
         {
@@ -41,6 +40,8 @@ namespace LeBlanc
                 return;
             }
 
+            #region SpellData
+
             Ignite = Player.Spellbook.GetSpell(Player.GetSpellSlot("summonerdot"));
 
             Q = new Spell(SpellSlot.Q, 700);
@@ -53,6 +54,10 @@ namespace LeBlanc
             E.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
 
             R = new Spell(SpellSlot.R);
+
+            #endregion
+
+            #region Menu
 
             Menu = new Menu("LeBlanc The Schemer", "LeBlanc", true);
 
@@ -163,9 +168,11 @@ namespace LeBlanc
             misc.AddItem(new MenuItem("Interrupt", "Interrupt Spells").SetValue(true));
             misc.AddItem(new MenuItem("AntiGapcloser", "AntiGapCloser").SetValue(true));
             misc.AddItem(new MenuItem("Sounds", "Sounds").SetValue(true));
+            misc.AddItem(new MenuItem("Troll", "Troll").SetValue(true));
 
             Menu.AddToMainMenu();
 
+            #endregion
 
             DamageIndicator.DamageToUnit = GetComboDamage;
             DamageIndicator.Enabled = Menu.Item("DamageIndicator").GetValue<bool>();
@@ -205,38 +212,38 @@ namespace LeBlanc
             var castE = Menu.Item("HarassE").GetValue<bool>() && E.IsReady();
             //  var castR = Menu.Item("HarassR").GetValue<bool>();
 
-            if (castQ && Q.CanCast(Target))
+            if (castQ && Q.CanCast(Target) && Q.Cast(Target).IsCast())
             {
-                Q.Cast(Target);
                 return;
             }
 
-            if (castW && Player.HealthPercentage() > 20 && GetWState() == 1 && W.InRange(Target, Q.Range))
+            if (castW && Player.HealthPercentage() > 20 && W.GetState(1) && W.InRange(Target, Q.Range) &&
+                W.Cast(Target).IsCast())
             {
-                W.Cast(Target);
                 return;
             }
 
-            if (GetWState() == 2 && Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.None)
+            if (castE && E.CanCast(Target) && E.CastIfHitchanceEquals(Target, GetHitChance("eHarassHitChance")))
             {
-                switch (GetWMode())
-                {
-                    case 1:
+                return;
+            }
+
+            if (W.GetState(1) || Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None)
+            {
+                return;
+            }
+
+            switch (W.GetToggleState())
+            {
+                case 1:
+                    Player.Spellbook.CastSpell(SpellSlot.W);
+                    break;
+                case 2:
+                    if (Target.Buffs.Any(buff => buff.Name.ToLower().Contains("leblancsoulshackle")))
+                    {
                         Player.Spellbook.CastSpell(SpellSlot.W);
-                        break;
-                    case 2:
-                        if (Target.Buffs.Any(buff => buff.Name.ToLower().Contains("leblancsoulshackle")))
-                        {
-                            Player.Spellbook.CastSpell(SpellSlot.W);
-                            return;
-                        }
-                        break;
-                }
-            }
-
-            if (castE && E.CanCast(Target))
-            {
-                E.CastIfHitchanceEquals(Target, GetHitChance("eHarassHitChance"));
+                    }
+                    break;
             }
         }
 
@@ -246,9 +253,12 @@ namespace LeBlanc
 
         private static void LaneClear()
         {
-            if (!Menu.Item("LaneClear").GetValue<KeyBind>().Active || !Q.IsReady() ||
-                !Menu.SubMenu("LaneClear").Item("LaneClearQ").GetValue<bool>() ||
-                Player.ManaPercentage() < Menu.SubMenu("LaneClear").Item("LaneClearQPercent").GetValue<Slider>().Value)
+            var lcActive = Menu.Item("LaneClear").GetValue<KeyBind>().Active;
+            var lcQ = Menu.Item("LaneClearQ").GetValue<bool>() && Q.IsReady();
+            var lcQMana = Menu.Item("LaneClearQPercent").GetValue<Slider>().Value;
+            var lowMana = Player.ManaPercentage() < lcQMana;
+
+            if (!lcActive || !lcQ || lowMana)
             {
                 return;
             }
@@ -259,9 +269,10 @@ namespace LeBlanc
                         minion =>
                             minion.IsValidTarget(Q.Range) &&
                             minion.Health < Player.GetDamageSpell(minion, SpellSlot.Q).CalculatedDamage);
-            if (unit != null && unit.IsValid)
+
+            if (unit.IsValidTarget(Q.Range))
             {
-                Q.CastOnUnit(unit);
+                Q.Cast(unit);
             }
         }
 
@@ -271,27 +282,26 @@ namespace LeBlanc
 
         private static void CloneLogic()
         {
-            if (Clone == null || !Clone.IsValid || !Menu.SubMenu("Clone").Item("Enabled").GetValue<bool>())
+            var pet = Player.Pet as Obj_AI_Base;
+            var usePet = Menu.SubMenu("Clone").Item("Enabled").GetValue<bool>();
+            var petMode = Menu.SubMenu("Clone").Item("Mode").GetValue<StringList>().SelectedIndex;
+            var valid = pet != null && pet.IsValid && !pet.IsDead && pet.Health > 1 && !pet.IsImmovable;
+
+            if (!usePet || !valid)
             {
                 return;
             }
 
-            var mode = Menu.SubMenu("Clone").Item("Mode").GetValue<StringList>().SelectedIndex;
-
-            switch (mode)
+            switch (petMode)
             {
                 case 0: // toward player
-                    var pos = Player.ServerPosition;
-                    if (Player.GetWaypoints().Count > 1)
-                    {
-                        pos = Player.GetWaypoints()[1].To3D();
-                    }
-                    Utility.DelayAction.Add(100, () => { Clone.IssueOrder(GameObjectOrder.MovePet, pos); });
+                    var pos = Player.GetWaypoints().Count > 1 ? Player.GetWaypoints()[1].To3D() : Player.ServerPosition;
+                    Utility.DelayAction.Add(200, () => { pet.IssueOrder(GameObjectOrder.MovePet, pos); });
                     break;
                 case 1: //toward target
-                    if (Clone.CanAttack && !Clone.IsWindingUp && Target.IsValidTarget(800) && !Clone.IsAutoAttacking)
+                    if (pet.CanAttack && !pet.IsWindingUp && Target.IsValidTarget(800) && !pet.IsAutoAttacking)
                     {
-                        Clone.IssueOrder(GameObjectOrder.AutoAttackPet, Target);
+                        pet.IssueOrder(GameObjectOrder.AutoAttackPet, Target);
                     }
                     break;
                 case 2: //away from player
@@ -299,9 +309,9 @@ namespace LeBlanc
                         100,
                         () =>
                         {
-                            Clone.IssueOrder(
+                            pet.IssueOrder(
                                 GameObjectOrder.MovePet,
-                                (Clone.Position + 500 * ((Clone.Position - Player.Position).Normalized())));
+                                (pet.Position + 500 * ((pet.Position - Player.Position).Normalized())));
                         });
                     break;
             }
@@ -313,38 +323,55 @@ namespace LeBlanc
 
         private static void Flee()
         {
-            if (!Menu.Item("FleeKey").GetValue<KeyBind>().Active)
+            var flee = Menu.Item("FleeKey").GetValue<KeyBind>().Active;
+
+            if (!flee)
             {
                 return;
             }
 
+            var fleeW = Menu.Item("FleeW").GetValue<bool>() && W.IsReady() && W.GetState(1);
+            var fleeE = Menu.Item("FleeE").GetValue<bool>() && E.IsReady();
+            var fleeR = Menu.Item("FleeRW").GetValue<bool>() && R.IsReady(SpellSlot.W) && W.GetState(2);
+            var eHitChance = GetHitChance("eFleeHitChance");
+
             Orbwalker.ActiveMode = Orbwalking.OrbwalkingMode.None;
 
-            if (W.IsReady() && GetWState() == 1 && Menu.Item("FleeW").GetValue<bool>())
+            if (fleeW)
             {
                 W.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range + 100));
                 Utility.DelayAction.Add(
                     (int) (W.Delay * 1000f + 100f), () =>
                     {
-                        Game.Say("/l");
+                        Troll();
                         var d = Player.Distance(Game.CursorPos);
                         Player.IssueOrder(GameObjectOrder.MoveTo, Player.ServerPosition.Extend(Game.CursorPos, d + 250));
                     });
                 return;
             }
 
-            if (E.IsReady() && Menu.Item("FleeE").GetValue<bool>() && Target != null && Target.IsValidTarget(E.Range) &&
-                E.GetPrediction(Target).Hitchance >= GetHitChance("eFleeHitChance"))
+            if (fleeE && Target.IsGoodCastTarget(E.Range) && E.GetPrediction(Target).Hitchance >= eHitChance)
             {
                 E.Cast(Target);
                 return;
             }
 
-            if (R.IsReady() && GetWState() == 2 && GetRSlot(SpellSlot.W) && Menu.Item("FleeRW").GetValue<bool>())
+            if (!fleeR)
             {
-                R.SetSpell(SpellSlot.W);
-                R.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range + 100));
+                return;
             }
+
+            Troll();
+
+            R.Cast(SpellSlot.W, Player.ServerPosition.Extend(Game.CursorPos, W.Range + 100));
+
+            Utility.DelayAction.Add(
+                (int) (W.Delay * 1000f + 100f), () =>
+                {
+                    Troll();
+                    var d = Player.Distance(Game.CursorPos);
+                    Player.IssueOrder(GameObjectOrder.MoveTo, Player.ServerPosition.Extend(Game.CursorPos, d + 250));
+                });
         }
 
         #endregion
@@ -353,35 +380,22 @@ namespace LeBlanc
 
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
-            if (sender == null || !sender.IsValid)
+            if (sender == null || !sender.IsValid || !sender.Name.Equals(LeBlancWObject))
             {
                 return;
             }
 
-            if (sender.Name.Equals(Player.Name))
-            {
-                Clone = sender as Obj_AI_Base;
-                return;
-            }
-
-            if (sender.Name == "LeBlanc_Base_W_return_indicator.troy")
-            {
-                WPosition = sender.Position;
-            }
+            WPosition = sender.Position;
         }
 
         private static void GameObject_OnDelete(GameObject sender, EventArgs args)
         {
-            if (sender.Name.Equals(Player.Name))
+            if (sender == null || !sender.IsValid || !sender.Name.Equals(LeBlancWObject))
             {
-                Clone = null;
                 return;
             }
 
-            if (sender.Name == "LeBlanc_Base_W_return_indicator.troy")
-            {
-                WPosition = Vector3.Zero;
-            }
+            WPosition = Vector3.Zero;
         }
 
         private static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
@@ -398,10 +412,9 @@ namespace LeBlanc
             Utility.DelayAction.Add(
                 (int) E.Delay * 1000 + 100, () =>
                 {
-                    if (R.IsReady() && GetRSlot(SpellSlot.E))
+                    if (R.IsReady(SpellSlot.E))
                     {
-                        R.SetSpell(SpellSlot.E);
-                        R.CastIfHitchanceEquals(unit, HitChance.Medium);
+                        R.CastIfHitchanceEquals(SpellSlot.E, unit, HitChance.Medium);
                     }
                 });
         }
@@ -421,10 +434,9 @@ namespace LeBlanc
             Utility.DelayAction.Add(
                 (int) E.Delay * 1000 + 100, () =>
                 {
-                    if (R.IsReady() && GetRSlot(SpellSlot.E))
+                    if (R.IsReady(SpellSlot.E))
                     {
-                        R.SetSpell(SpellSlot.E);
-                        R.CastIfHitchanceEquals(interruptunit, HitChance.High);
+                        R.CastIfHitchanceEquals(SpellSlot.E, interruptunit, HitChance.Medium);
                     }
                 });
         }
@@ -432,49 +444,39 @@ namespace LeBlanc
         private static void Obj_AI_Base_OnProcessSpellCast(GameObject sender, GameObjectProcessSpellCastEventArgs args)
         {
             var s = sender as Obj_AI_Hero;
-            if (s == null || !s.IsValid || !s.IsMe)
+
+            if (s == null || !s.IsValid || !s.IsMe || args.SData == null)
             {
                 return;
             }
-            var targ = args.Target as Obj_AI_Hero;
-            /*     if (targ == null || !targ.IsValid)
-            {
-               // Console.WriteLine("NO TARG");
-                return;
-            }*/
 
-            if (Menu.Item("ComboKey").GetValue<KeyBind>().Active)
+            var targ = args.Target as Obj_AI_Hero;
+            var comboMode = Menu.Item("ComboKey").GetValue<KeyBind>().Active;
+            var harassMode = Menu.Item("Harass").GetValue<KeyBind>().Active;
+            var isQSpell = args.SData.Name == Q.Instance.Name;
+            var isWSpell = args.SData.Name == "LeblancSlide";
+
+            if (comboMode)
             {
-                if (targ != null && targ.IsValid && args.SData.Name == Q.Instance.Name && R.IsReady())
+                if (isQSpell && R.IsReady() && targ.IsValidTarget(Q.Range))
                 {
-                    // Console.WriteLine("DELAY");
-                    Utility.DelayAction.Add(
-                        400, () =>
-                        {
-                            if (targ.HasBuff("LeblancChaosOrb", true))
-                            {
-                                Player.Spellbook.CastSpell(SpellSlot.R, args.Target);
-                                return;
-                            }
-                            Console.WriteLine("Can't ult");
-                        });
+                    Utility.DelayAction.Add(150, () => { R.Cast(SpellSlot.W, targ); });
+
                     return;
                 }
-                if (args.SData.Name == "LeblancSlide")
+
+                if (isWSpell)
                 {
-                    // Console.WriteLine("SLIDE");
-                    if (Target != null && Target.IsValid && Player.Distance(Target) > 400 && R.IsReady() &&
-                        GetRSlot(SpellSlot.W))
+                    if (Target.IsGoodCastTarget(400) && R.IsReady(SpellSlot.W) && R.Cast(SpellSlot.W, Target).IsCast())
                     {
-                        //    Console.WriteLine("FINISHLCBIOM");
-                        Player.Spellbook.CastSpell(SpellSlot.R, Target.Position);
                         return;
                     }
+
                     Combo();
                 }
             }
 
-            if (Menu.Item("Harass").GetValue<KeyBind>().Active && args.SData.Name == "LeblancSlide")
+            if (harassMode && isWSpell)
             {
                 Harass();
             }
@@ -490,14 +492,14 @@ namespace LeBlanc
             Flee();
             KSLogic();
             CloneLogic();
-            SecondWLogic();
+            //SecondWLogic();
 
             Target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
             Target = Target.IsGoodCastTarget(1500)
                 ? Target
                 : TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
-            if (Target == null || !Target.IsValid)
+            if (!Target.IsValidTarget(1500))
             {
                 return;
             }
@@ -608,7 +610,7 @@ namespace LeBlanc
             var castQ = Menu.Item("ComboQ").GetValue<bool>() && Q.IsReady();
             var castW = Menu.Item("ComboW").GetValue<bool>() && W.IsReady();
             var castE = Menu.Item("ComboE").GetValue<bool>() && E.IsReady();
-            var castR = Menu.Item("ComboR").GetValue<bool>() && R.IsReady();
+            var castR = Menu.Item("ComboR").GetValue<bool>() && R.IsReady(SpellSlot.Q);
 
             var castItems = Menu.Item("MiscItems").GetValue<bool>();
 
@@ -620,26 +622,24 @@ namespace LeBlanc
                 }
             }
 
-
-            if (castR && GetRSlot(SpellSlot.Q) && Player.Spellbook.CastSpell(SpellSlot.R, Target))
+            if (castR && R.Cast(SpellSlot.Q, Target).IsCast())
             {
                 return;
             }
 
-            if (castQ && Q.CanCast(Target))
+            if (castQ && Q.CanCast(Target) && Q.Cast(Target).IsCast())
             {
-                Q.Cast(Target);
                 return;
             }
 
-            if (castW && W.InRange(Target, Q.Range) && GetWState() == 1 &&
+            if (castW && W.InRange(Target, Q.Range) && W.GetState(1) &&
                 Player.HealthPercentage() >= Menu.Item("WMinHP").GetValue<Slider>().Value)
             {
                 W.RandomizeCast(Target.Position);
                 return;
             }
 
-            if ((!W.IsReady() || GetWState() == 2) && castE && E.IsReady() && E.InRange(Target, 800))
+            if ((!W.IsReady() || W.GetState(2)) && castE && E.IsReady() && E.InRange(Target, 800))
             {
                 E.CastIfHitchanceEquals(Target, GetHitChance("eComboHitChance"));
             }
@@ -647,8 +647,7 @@ namespace LeBlanc
 
         private static void WCombo()
         {
-            if (!W.IsReady() || GetWState() == 2 || !R.IsReady() || Target == null ||
-                !Target.IsValidTarget(W.Range * 2 - 100) ||
+            if (!W.IsReady() || W.GetState(2) || !R.IsReady() || !Target.IsGoodCastTarget(W.Range * 2 - 100) ||
                 Target.HealthPercentage() > Menu.Item("TargetHP").GetValue<Slider>().Value ||
                 Player.HealthPercentage() < Menu.Item("PlayerHP").GetValue<Slider>().Value)
             {
@@ -664,54 +663,20 @@ namespace LeBlanc
 
         #region Utilities
 
-        private static int GetWState()
+        private static void Troll()
         {
-            return Player.GetSpell(SpellSlot.W).ToggleState;
+            if (!Menu.Item("Troll").GetValue<bool>() || Environment.TickCount - LastTroll < 1500)
+            {
+                return;
+            }
+
+            LastTroll = Environment.TickCount;
+            Game.Say("/l");
         }
 
         private static int GetWMode()
         {
             return Menu.SubMenu("Harass").Item("SecondW").GetValue<StringList>().SelectedIndex;
-        }
-
-        private static bool GetRSlot(SpellSlot slot)
-        {
-            if (!R.IsReady() || R.Instance.Name == null)
-            {
-                return slot == SpellSlot.R;
-            }
-            switch (R.Instance.Name)
-            {
-                //leblancslidereturnm
-                case "LeblancChaosOrbM":
-                    return slot == SpellSlot.Q;
-                case "LeblancSlideM":
-                    return slot == SpellSlot.W;
-                case "LeblancSoulShackleM":
-                    return slot == SpellSlot.E;
-                default:
-                    return slot == SpellSlot.R;
-            }
-        }
-
-        private static SpellSlot GetRSpellSlot()
-        {
-            if (!R.IsReady() || R.Instance.Name == null)
-            {
-                return SpellSlot.R;
-            }
-            switch (R.Instance.Name)
-            {
-                //leblancslidereturnm
-                case "LeblancChaosOrbM":
-                    return SpellSlot.Q;
-                case "LeblancSlideM":
-                    return SpellSlot.W;
-                case "LeblancSoulShackleM":
-                    return SpellSlot.E;
-                default:
-                    return SpellSlot.R;
-            }
         }
 
         private static HitChance GetHitChance(string name)
@@ -731,13 +696,23 @@ namespace LeBlanc
 
         private static void SecondWLogic()
         {
-            if (Menu.Item("MiscW2").GetValue<bool>() &&
-                Player.HealthPercentage() <= Menu.Item("MiscW2HP").GetValue<Slider>().Value && W.IsReady() &&
-                GetWState() == 2 && !Q.IsReady() && !E.IsReady() &&
-                WPosition.CountEnemysInRange(500) < Player.CountEnemysInRange(500))
+            if (!W.IsReady() || W.GetState(1) || Q.IsReady() || E.IsReady())
             {
-                Player.Spellbook.CastSpell(SpellSlot.W);
+                return;
             }
+
+            var useSecondW = Menu.Item("MiscW2").GetValue<bool>();
+            var wMinHP = Menu.Item("MiscW2HP").GetValue<Slider>().Value;
+            var belowMinHealth = Player.HealthPercentage() < wMinHP;
+            var moreEnemiesInRange = WPosition.CountEnemysInRange(500) > Player.CountEnemysInRange(500);
+            var isFleeing = Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None;
+
+            if (!useSecondW || belowMinHealth || moreEnemiesInRange || isFleeing)
+            {
+                return;
+            }
+
+            Player.Spellbook.CastSpell(SpellSlot.W);
         }
 
         #endregion
@@ -746,17 +721,15 @@ namespace LeBlanc
 
         private static void KSLogic()
         {
+            KSIgnite();
+            KSR();
+
             if (Q.IsReady())
             {
                 KSQ();
             }
 
-            if (R.IsReady())
-            {
-                KSR();
-            }
-
-            if (W.IsReady() && GetWState() == 1)
+            if (W.IsReady() && W.GetState(1))
             {
                 KSW();
             }
@@ -764,11 +737,6 @@ namespace LeBlanc
             if (E.IsReady())
             {
                 KSE();
-            }
-
-            if (Ignite != null && Ignite.Slot != SpellSlot.Unknown && Ignite.IsReady())
-            {
-                KSIgnite();
             }
         }
 
@@ -784,10 +752,8 @@ namespace LeBlanc
                 return;
             }
 
-            if (ult)
+            if (ult && R.Cast(SpellSlot.Q, unit).IsCast())
             {
-                R.SetSpell(SpellSlot.Q);
-                R.Cast(unit);
                 return;
             }
 
@@ -806,9 +772,8 @@ namespace LeBlanc
                 return;
             }
 
-            if (ult)
+            if (ult && R.Cast(SpellSlot.W, unit).IsCast())
             {
-                R.SetSpell(SpellSlot.W);
                 R.Cast(unit);
                 return;
             }
@@ -822,15 +787,14 @@ namespace LeBlanc
                 ObjectManager.Get<Obj_AI_Hero>()
                     .FirstOrDefault(
                         obj => obj.IsValidTarget(E.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.E));
+
             if (unit == null || !unit.IsValid || E.GetPrediction(unit).Hitchance < HitChance.High)
             {
                 return;
             }
 
-            if (ult)
+            if (ult && R.Cast(SpellSlot.E, unit).IsCast())
             {
-                R.SetSpell(SpellSlot.E);
-                R.Cast(unit);
                 return;
             }
 
@@ -839,7 +803,12 @@ namespace LeBlanc
 
         private static void KSR()
         {
-            switch (GetRSpellSlot())
+            if (!R.IsReady())
+            {
+                return;
+            }
+
+            switch (R.GetSpellSlot())
             {
                 case SpellSlot.Q:
                     KSQ(true);
@@ -857,12 +826,18 @@ namespace LeBlanc
 
         private static void KSIgnite()
         {
+            if (!Ignite.IsReady())
+            {
+                return;
+            }
+
             var unit =
                 ObjectManager.Get<Obj_AI_Hero>()
                     .FirstOrDefault(
                         obj =>
                             obj.IsValidTarget(600) &&
                             obj.Health < Player.GetSummonerSpellDamage(obj, Damage.SummonerSpell.Ignite));
+
             if (unit != null && unit.IsValid)
             {
                 Player.Spellbook.CastSpell(Ignite.Slot, unit);
