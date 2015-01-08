@@ -141,7 +141,7 @@ namespace LeBlanc
             var fleeE = flee.AddSubMenu(new Menu("E", "E"));
             fleeE.AddItem(new MenuItem("FleeE", "Use E").SetValue(true));
             fleeE.AddItem(
-                new MenuItem("eFleesHitChance", "MinHitChance").SetValue(
+                new MenuItem("eFleefHitChance", "MinHitChance").SetValue(
                     new StringList(
                         new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
 
@@ -333,7 +333,8 @@ namespace LeBlanc
 
             var fleeW = Menu.Item("FleeW").GetValue<bool>() && W.IsReady() && W.GetState(1);
             var fleeE = Menu.Item("FleeE").GetValue<bool>() && E.IsReady();
-            var fleeR = Menu.Item("FleeRW").GetValue<bool>() && R.IsReady(SpellSlot.W) && W.GetState(2);
+            var fleeR = Menu.Item("FleeRW").GetValue<bool>() && R.IsReady(SpellSlot.W) &&
+                        (W.GetState(2) || W.Instance.State != SpellState.Ready);
             var eHitChance = GetHitChance("eFleeHitChance");
 
             Orbwalker.ActiveMode = Orbwalking.OrbwalkingMode.None;
