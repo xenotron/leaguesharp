@@ -95,13 +95,27 @@ namespace TUrgot
             //Menu.SubMenu("Drawings")
             //    .AddItem(new MenuItem("BubbleThickness", "Bubble Thickness").SetValue(new Slider(15, 10, 25)));
 
-            Menu.AddItem((new MenuItem("AutoQ", "Smart Q").SetValue(true)));
+            Menu.AddItem(new MenuItem("AutoQ", "Smart Q").SetValue(true));
+            Menu.AddItem(new MenuItem("Interrupt", "Interrupt with Ult").SetValue(true));
+
             Menu.AddToMainMenu();
 
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnGameUpdate += Game_OnGameUpdate;
-
+            Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Game.PrintChat("Trees" + ChampName + " loaded!");
+        }
+
+        private static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
+        {
+            if (!Menu.Item("Interrupt").GetValue<bool>() || unit == null ||
+                !unit.IsValidTarget(400 + 150 * Player.Spellbook.GetSpell(SpellSlot.R).Level) ||
+                spell.DangerLevel < InterruptableDangerLevel.High)
+            {
+                return;
+            }
+
+            Player.Spellbook.CastSpell(SpellSlot.R, unit);
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
