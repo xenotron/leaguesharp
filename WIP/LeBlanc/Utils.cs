@@ -25,6 +25,12 @@ namespace LeBlanc
                    ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, target);
         }
 
+        public static bool HasItem(this ItemData.Item item)
+        {
+            var slot = item.GetItemSlot();
+            return slot != null && slot.IsValidSlot();
+        }
+
         public static bool IsReady(this InventorySlot slot)
         {
             return slot != null && slot.IsValidSlot() && slot.IsReady();
@@ -124,11 +130,6 @@ namespace LeBlanc
         public static bool IsReady(this Spell spell, SpellSlot slot)
         {
             return spell.IsReady() && spell.GetSpellSlot() == slot;
-        }
-
-        public static bool IsGoodCastTarget(this Obj_AI_Hero hero, float range)
-        {
-            return hero != null && hero.IsValidTarget(range);
         }
     }
 }

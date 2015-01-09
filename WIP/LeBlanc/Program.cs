@@ -163,10 +163,16 @@ namespace LeBlanc
             draw.Item("DamageIndicator").ValueChanged += Program_ValueChanged;
 
             var misc = Menu.AddSubMenu(new Menu("Misc Settings", "Misc"));
+
+            var sw = misc.AddSubMenu(new Menu("Second W", "SW"));
+            sw.AddItem(new MenuItem("MiscW2", "Use Second W").SetValue(true));
+            sw.AddItem(new MenuItem("MiscW2HP", "HP% to Cast Second W").SetValue(new Slider(20)));
+
+            var ks = misc.AddSubMenu(new Menu("KillSteal", "KS"));
+            ks.AddItem(new MenuItem("KSIgnite", "KS with Ignite").SetValue(true));
+            ks.AddItem(new MenuItem("KS", "KS with Spells").SetValue(true));
+
             misc.AddItem(new MenuItem("MiscItems", "Use Items (DFG)").SetValue(true));
-            misc.AddItem(new MenuItem("KS", "KillSteal with Spells").SetValue(true));
-            misc.AddItem(new MenuItem("MiscW2", "Use Second W").SetValue(true));
-            misc.AddItem(new MenuItem("MiscW2HP", "HP% to Use Second W").SetValue(new Slider(20)));
             misc.AddItem(new MenuItem("Interrupt", "Interrupt Spells").SetValue(true));
             misc.AddItem(new MenuItem("AntiGapcloser", "AntiGapCloser").SetValue(true));
             misc.AddItem(new MenuItem("Sounds", "Sounds").SetValue(true));
@@ -234,7 +240,7 @@ namespace LeBlanc
                 return;
             }
 
-            switch (W.GetToggleState())
+            switch (GetWMode())
             {
                 case 1:
                     Player.Spellbook.CastSpell(SpellSlot.W);
@@ -352,7 +358,7 @@ namespace LeBlanc
                 return;
             }
 
-            if (fleeE && Target.IsGoodCastTarget(E.Range) && E.GetPrediction(Target).Hitchance >= eHitChance)
+            if (fleeE && Target.IsValidTarget(E.Range) && E.GetPrediction(Target).Hitchance >= eHitChance)
             {
                 E.Cast(Target);
                 return;
@@ -386,6 +392,7 @@ namespace LeBlanc
             {
                 return;
             }
+
             WPosition = sender.Position;
         }
 
@@ -403,7 +410,7 @@ namespace LeBlanc
         {
             var unit = gapcloser.Sender as Obj_AI_Hero;
 
-            if (!Menu.Item("Interrupt").GetValue<bool>() || !unit.IsGoodCastTarget(E.Range) || !E.IsReady())
+            if (!Menu.Item("Interrupt").GetValue<bool>() || !unit.IsValidTarget(E.Range) || !E.IsReady())
             {
                 return;
             }
@@ -424,7 +431,7 @@ namespace LeBlanc
         {
             var interruptunit = unit as Obj_AI_Hero;
 
-            if (!Menu.Item("Interrupt").GetValue<bool>() || !interruptunit.IsGoodCastTarget(E.Range) ||
+            if (!Menu.Item("Interrupt").GetValue<bool>() || !interruptunit.IsValidTarget(E.Range) ||
                 spell.DangerLevel < InterruptableDangerLevel.High || !E.IsReady())
             {
                 return;
@@ -456,7 +463,7 @@ namespace LeBlanc
             var harassMode = Menu.Item("Harass").GetValue<KeyBind>().Active;
             var isQSpell = args.SData.Name == Q.Instance.Name;
             var isWSpell = args.SData.Name == "LeblancSlide";
-            var castR = Target.IsGoodCastTarget(400) && R.IsReady(SpellSlot.W);
+            var castR = Target.IsValidTarget(400) && R.IsReady(SpellSlot.W);
 
             if (comboMode)
             {
@@ -492,7 +499,7 @@ namespace LeBlanc
             SecondWLogic();
 
             Target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
-            Target = Target.IsGoodCastTarget(1500)
+            Target = Target.IsValidTarget(1500)
                 ? Target
                 : TargetSelector.GetTarget(W.Range + 200, TargetSelector.DamageType.Magical);
 
@@ -560,7 +567,7 @@ namespace LeBlanc
 
                 if (enemy.HasBuff("LeblancChaosOrb", true) || enemy.HasBuff("LeblancChaosOrbM", true))
                 {
-                    d *= 2;
+                    d += Player.GetSpellDamage(enemy, SpellSlot.Q);
                 }
 
                 damage += d;
@@ -594,6 +601,11 @@ namespace LeBlanc
             if (Items.BOTRK.IsReady())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.Botrk);
+            }
+
+            if (Items.LT.HasItem())
+            {
+                damage += Player.GetItemDamage(enemy, Damage.DamageItems.LiandrysTorment);
             }
 
             if (Ignite.IsReady())
@@ -690,7 +702,7 @@ namespace LeBlanc
 
         private static void WCombo()
         {
-            if (!W.IsReady() || W.GetState(2) || !R.IsReady() || !Target.IsGoodCastTarget(W.Range * 2 - 100) ||
+            if (!W.IsReady() || W.GetState(2) || !R.IsReady() || !Target.IsValidTarget(W.Range * 2 - 100) ||
                 Target.HealthPercentage() > Menu.Item("TargetHP").GetValue<Slider>().Value ||
                 Player.HealthPercentage() < Menu.Item("PlayerHP").GetValue<Slider>().Value)
             {
@@ -874,7 +886,8 @@ namespace LeBlanc
 
         private static void KSIgnite()
         {
-            if (Ignite == null || Ignite.Slot == SpellSlot.Unknown || !Ignite.Slot.IsReady())
+            if (!Menu.Item("KSIgnite").GetValue<bool>() || Ignite == null || Ignite.Slot == SpellSlot.Unknown ||
+                !Ignite.Slot.IsReady())
             {
                 return;
             }
