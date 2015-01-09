@@ -141,7 +141,7 @@ namespace LeBlanc
             var fleeE = flee.AddSubMenu(new Menu("E", "E"));
             fleeE.AddItem(new MenuItem("FleeE", "Use E").SetValue(true));
             fleeE.AddItem(
-                new MenuItem("eFleeHitChance", "MinHitChance").SetValue(
+                new MenuItem("eFleefHitChance", "MinHitChance").SetValue(
                     new StringList(
                         new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
 
