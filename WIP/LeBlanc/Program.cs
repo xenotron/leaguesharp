@@ -51,7 +51,7 @@ namespace LeBlanc
             W = new Spell(SpellSlot.W, 600);
             W.SetSkillshot(.5f, 100, 2000, false, SkillshotType.SkillshotCircle);
 
-            E = new Spell(SpellSlot.E, 970);
+            E = new Spell(SpellSlot.E, 950);
             E.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
 
             R = new Spell(SpellSlot.R);
@@ -141,7 +141,7 @@ namespace LeBlanc
             var fleeE = flee.AddSubMenu(new Menu("E", "E"));
             fleeE.AddItem(new MenuItem("FleeE", "Use E").SetValue(true));
             fleeE.AddItem(
-                new MenuItem("eFleefHitChance", "MinHitChance").SetValue(
+                new MenuItem("eFleeHitChance", "MinHitChance").SetValue(
                     new StringList(
                         new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
 
@@ -218,7 +218,7 @@ namespace LeBlanc
                 return;
             }
 
-            if (castW && Player.HealthPercentage() > 20 && W.GetState(1) && W.InRange(Target, Q.Range) &&
+            if (castW && Player.HealthPercentage() > 20 && W.GetState(1) && W.IsInRange(Target, W.Range + 200) &&
                 W.Cast(Target).IsCast())
             {
                 return;
@@ -386,7 +386,6 @@ namespace LeBlanc
             {
                 return;
             }
-
             WPosition = sender.Position;
         }
 
@@ -495,7 +494,7 @@ namespace LeBlanc
             Target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
             Target = Target.IsGoodCastTarget(1500)
                 ? Target
-                : TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+                : TargetSelector.GetTarget(W.Range + 200, TargetSelector.DamageType.Magical);
 
             if (!Target.IsValidTarget(1500))
             {
@@ -577,19 +576,24 @@ namespace LeBlanc
                 damage += Player.GetSpellDamage(enemy, SpellSlot.W);
             }
 
-            if (ItemData.Deathfire_Grasp.IsReady())
+            if (Items.DFG.IsReady())
             {
                 damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
-            if (ItemData.Blackfire_Torch.IsReady())
+            if (Items.BFT.IsReady())
             {
                 damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.BlackFireTorch);
             }
 
-            if (ItemData.Frost_Queens_Claim.IsReady())
+            if (Items.FQC.IsReady())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.FrostQueenClaim);
+            }
+
+            if (Items.BOTRK.IsReady())
+            {
+                damage += Player.GetItemDamage(enemy, Damage.DamageItems.Botrk);
             }
 
             if (Ignite.IsReady())
@@ -611,25 +615,17 @@ namespace LeBlanc
                 return;
             }
 
-//            Console.WriteLine("COMBO");
-            if (Target.IsValidTarget(Q.Range))
+            if (Target.IsValidTarget(W.Range + 200))
             {
                 Combo();
                 return;
             }
 
-            var d = Player.Distance(Target);
-            if (d > W.Range + 150 && d < W.Range * 2)
+            if (Target.IsValidTarget((W.Range * 2)))
             {
                 WCombo();
             }
         }
-
-        #region Items
-
-        private static void Items() {}
-
-        #endregion
 
         private static void Combo()
         {
@@ -637,29 +633,38 @@ namespace LeBlanc
             var castW = Menu.Item("ComboW").GetValue<bool>() && W.IsReady();
             var castE = Menu.Item("ComboE").GetValue<bool>() && E.IsReady();
             var castR = Menu.Item("ComboR").GetValue<bool>() && R.IsReady(SpellSlot.Q);
-
             var castItems = Menu.Item("MiscItems").GetValue<bool>();
-
-            if (!castItems)
-            {
-                return;
-            }
-
             var spellsUp = Q.IsReady() && W.IsReady() && E.IsReady() && R.IsReady();
             var d = Player.Distance(Target);
 
-            if (d <= 750 && spellsUp && (ItemData.Deathfire_Grasp.Cast(Target) || ItemData.Blackfire_Torch.Cast(Target)))
+            #region Items
+
+            if (castItems)
             {
-                return;
+                if (spellsUp && d < Items.DFG.Range && Items.DFG.Cast(Target))
+                {
+                    return;
+                }
+
+                if (spellsUp && d < Items.BFT.Range && Items.BFT.Cast(Target))
+                {
+                    return;
+                }
+
+                if (d < Items.BOTRK.Range && Items.BOTRK.Cast(Target))
+                {
+                    return;
+                }
+
+                if (d < Items.FQC.Range && Items.FQC.Cast(Target))
+                {
+                    return;
+                }
             }
 
-            if (d < ItemData.Frost_Queens_Claim.Range)
-            {
-                ItemData.Frost_Queens_Claim.Cast(Target);
-            }
+            #endregion
 
-
-            if (castR && R.Cast(SpellSlot.Q, Target).IsCast())
+            if (castR && Q.IsInRange(Target) && R.Cast(SpellSlot.Q, Target).IsCast())
             {
                 return;
             }
@@ -669,14 +674,15 @@ namespace LeBlanc
                 return;
             }
 
-            if (castW && W.InRange(Target, Q.Range) && W.GetState(1) &&
+            if (castW && W.IsInRange(Target, W.Range + 200) && W.GetState(1) &&
                 Player.HealthPercentage() >= Menu.Item("WMinHP").GetValue<Slider>().Value)
             {
-                W.RandomizeCast(Target.Position);
+                W.Cast(Target);
+                //W.RandomizeCast(Target.Position);
                 return;
             }
 
-            if ((!W.IsReady() || W.GetState(2)) && castE && E.IsReady() && E.InRange(Target, 800))
+            if ((!W.IsReady() || W.GetState(2)) && castE && E.IsReady() && E.IsInRange(Target, 800))
             {
                 E.CastIfHitchanceEquals(Target, GetHitChance("eComboHitChance"));
             }
@@ -692,7 +698,7 @@ namespace LeBlanc
             }
 
             //  Console.WriteLine("LCOMBO");
-            var pos = Player.Position.Extend(Target.Position, W.Range);
+            var pos = Player.Position.Extend(Target.Position, W.Range + 100);
             W.Cast(pos);
         }
 
@@ -739,9 +745,8 @@ namespace LeBlanc
             }
 
             var useSecondW = Menu.Item("MiscW2").GetValue<bool>();
-            var wMinHP = Menu.Item("MiscW2HP").GetValue<Slider>().Value;
-            var belowMinHealth = Player.HealthPercentage() < wMinHP;
-            var moreEnemiesInRange = WPosition.CountEnemysInRange(500) > Player.CountEnemysInRange(500);
+            var belowMinHealth = Player.HealthPercentage() < Menu.Item("MiscW2HP").GetValue<Slider>().Value;
+            var moreEnemiesInRange = WPosition.CountEnemysInRange(600) > Player.CountEnemysInRange(600);
             var isFleeing = Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None;
 
             if (!useSecondW || belowMinHealth || moreEnemiesInRange || isFleeing)
@@ -749,7 +754,7 @@ namespace LeBlanc
                 return;
             }
 
-            Player.Spellbook.CastSpell(SpellSlot.W);
+            Utility.DelayAction.Add(200, () => { Player.Spellbook.CastSpell(SpellSlot.W); });
         }
 
         #endregion
@@ -810,7 +815,7 @@ namespace LeBlanc
                     .FirstOrDefault(
                         obj => obj.IsValidTarget(W.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.W));
 
-            if (!unit.IsValidTarget(W.Range))
+            if (!unit.IsValidTarget(W.Range + 200))
             {
                 return;
             }
