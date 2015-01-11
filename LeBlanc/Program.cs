@@ -205,17 +205,27 @@ namespace LeBlanc
             if (R.IsReady())
             {
                 var d = 0d;
+                var level = R.Instance.Level;
+                var maxDamage = new double[] { 200, 400, 600 }[level] + 1.3f * Player.FlatMagicDamageMod;
 
                 switch (R.GetSpellSlot())
                 {
                     case SpellSlot.Q:
-                        d = Player.GetSpellDamage(enemy, SpellSlot.Q);
+                        var qDmg = Player.CalcDamage(
+                            enemy, Damage.DamageType.Magical,
+                            new double[] { 100, 200, 300 }[level] + .65f * Player.FlatMagicDamageMod);
+                        d = qDmg > maxDamage ? maxDamage : qDmg;
                         break;
                     case SpellSlot.W:
-                        d = Player.GetSpellDamage(enemy, SpellSlot.W);
+                        d = Player.CalcDamage(
+                            enemy, Damage.DamageType.Magical,
+                            new double[] { 150, 300, 450 }[level] + .975f * Player.FlatMagicDamageMod);
                         break;
                     case SpellSlot.E:
-                        d = Player.GetSpellDamage(enemy, SpellSlot.E);
+                        var eDmg = Player.CalcDamage(
+                            enemy, Damage.DamageType.Magical,
+                            new double[] { 100, 200, 300 }[level] + .65f * Player.FlatMagicDamageMod);
+                        d = eDmg > maxDamage ? maxDamage : eDmg;
                         break;
                 }
 
