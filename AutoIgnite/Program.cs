@@ -58,7 +58,7 @@ namespace AutoIgnite
                 return;
 
             if (CanIgnite())
-                _player.SummonerSpellbook.CastSpell(_ignite.Slot, enemy);
+                _player.Spellbook.CastSpell(_ignite.Slot, enemy);
         }
     }
 }
