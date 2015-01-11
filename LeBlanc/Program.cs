@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using LeBlanc.Properties;
+using SharpDX;
+using Color = System.Drawing.Color;
 
 namespace LeBlanc
 {
@@ -127,7 +128,7 @@ namespace LeBlanc
             E.CastIfHitchanceEquals(unit, HitChance.Medium);
 
             Utility.DelayAction.Add(
-                (int) E.Delay / 2 + 50, () =>
+                (int) E.Delay * 1000 + Game.Ping / 2 + 50, () =>
                 {
                     if (R.IsReady(SpellSlot.E))
                     {
@@ -149,7 +150,7 @@ namespace LeBlanc
             E.CastIfHitchanceEquals(hero, HitChance.Medium);
 
             Utility.DelayAction.Add(
-                (int) E.Delay / 2 + 50, () =>
+                (int) E.Delay * 1000 + Game.Ping / 2 + 50, () =>
                 {
                     if (R.IsReady(SpellSlot.E))
                     {
@@ -164,13 +165,22 @@ namespace LeBlanc
 
         private static void Drawing_OnDraw(EventArgs args)
         {
+            if (Combo.WPosition != Vector3.Zero)
+            {
+                Render.Circle.DrawCircle(Combo.WPosition, 200, Color.Red, 8);
+            }
+
             foreach (var spell in
                 Player.Spellbook.GetMainSpells().Where(s => s.IsReady() || Menu.Item("DrawCD").GetValue<bool>()))
             {
                 try
                 {
                     var circle = Menu.Item("Draw" + (int) spell.Slot).GetValue<Circle>();
-                    Render.Circle.DrawCircle(Player.Position, circle.Radius, spell.IsReady() ? circle.Color : Color.Red);
+                    if (circle.Active && spell.Level > 0)
+                    {
+                        Render.Circle.DrawCircle(
+                            Player.Position, circle.Radius, spell.IsReady() ? circle.Color : Color.Red);
+                    }
                 }
                 catch {}
             }

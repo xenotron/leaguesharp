@@ -7,7 +7,7 @@ using System.Resources;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("LeBlanc")]
-[assembly: AssemblyDescription("V1.20")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("LeBlanc")]
@@ -33,6 +33,6 @@ using System.Resources;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.20")]
-[assembly: AssemblyFileVersion("1.0.20")]
+[assembly: AssemblyVersion("1.0.0.21")]
+[assembly: AssemblyFileVersion("1.0.21")]
 [assembly: NeutralResourcesLanguageAttribute("")]

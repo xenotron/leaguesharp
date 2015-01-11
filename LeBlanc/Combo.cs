@@ -22,6 +22,7 @@ namespace LeBlanc
             //gapclose.AddItem(new MenuItem("Spacer", "This doesn't work yet"));
             //gapclose.AddItem(new MenuItem("GapCloseEnabled", "Use GapClose Combo").SetValue(true));
             //replace with damage calcs
+            gapclose.AddItem(new MenuItem("ComboDFG", "Only initiate with DFG").SetValue(false));
             gapclose.AddItem(new MenuItem("TargetHP", "At Target HP %").SetValue(new Slider(40)));
             gapclose.AddItem(new MenuItem("PlayerHP", "Min Player HP %").SetValue(new Slider(40)));
 
@@ -56,6 +57,7 @@ namespace LeBlanc
 
             LocalMenu = combo;
 
+            //    Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             GameObject.OnCreate += GameObject_OnCreate;
             GameObject.OnDelete += GameObject_OnDelete;
             Game.OnGameUpdate += Game_OnGameUpdate;
@@ -133,7 +135,7 @@ namespace LeBlanc
 
             #endregion
 
-     /*       if (CastSecondW())
+            /*       if (CastSecondW())
             {
                 return;
             }
@@ -205,7 +207,7 @@ namespace LeBlanc
 
         private static float GetComboRange()
         {
-            return Menu.Item("ComboQRange").GetValue<bool>() ? W.Range * 2 : E.Range;
+            return Menu.Item("ComboQRange").GetValue<bool>() ? Q.Range : E.Range;
         }
 
         #region Events 
@@ -220,22 +222,51 @@ namespace LeBlanc
             if (Target.IsValidTarget(GetComboRange()))
             {
                 ComboLogic();
-                return;
             }
 
-            if (Target.IsValidTarget(W.Range * 2))
+
+            //  Render.Circle.DrawCircle(Player.Position, W.Range + Items.DFG.Range + 100, System.Drawing.Color.Green);
+            /*  if (Target.IsValidTarget(W.Range + Items.DFG.Range + 100))
             {
                 var canCast = CanCast("W") && W.IsReady() && W.GetState(1) && R.IsReady();
                 var isTargetLow = Target.HealthPercentage() <= Menu.Item("TargetHP").GetValue<Slider>().Value;
                 var isPlayerLow = Player.HealthPercentage() <= Menu.Item("PlayerHP").GetValue<Slider>().Value;
+                var canDFG = !CanCast("DFG") && (Items.DFG.HasItem() && Items.DFG.IsReady()) || (Items.BFT.HasItem() && Items.BFT.IsReady());
 
-                if (!canCast || !isTargetLow || isPlayerLow)
+                if (!canCast || !isTargetLow || isPlayerLow || !canDFG)
                 {
                     return;
                 }
 
                 var pos = Player.Position.Extend(Target.Position, W.Range + 100);
                 if (W.Cast(pos)) {}
+            }*/
+        }
+
+        private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            var unit = sender as Obj_AI_Hero;
+
+            if (unit == null || !unit.IsValid || !unit.IsMe || args.SData == null || !Enabled)
+            {
+                return;
+            }
+
+            Console.WriteLine(args.SData.Name);
+            //     Console.WriteLine(R.Instance.Name);
+            var castDFG = CanCast("Items") && Items.DFG.HasItem() && Items.DFG.IsReady() &&
+                          Target.IsValidTarget(Items.DFG.Range);
+
+            if (args.SData.Name == "LeblancSlide" && castDFG && R.IsReady())
+            {
+                Console.WriteLine(R.Instance.Name);
+                Items.DFG.Cast(Target);
+                return;
+            }
+
+            if (args.SData.Name.Equals("DFG") && Target.IsValidTarget(W.Range + 100) && R.IsReady(SpellSlot.W))
+            {
+                R.Cast(SpellSlot.R, Target);
             }
         }
 

@@ -53,7 +53,7 @@ namespace LeBlanc
 
         public static bool Enabled
         {
-            get { return Program.Menu.Item("HarassKey").GetValue<KeyBind>().Active; }
+            get { return !Player.IsDead && Program.Menu.Item("HarassKey").GetValue<KeyBind>().Active; }
         }
 
         private static Obj_AI_Hero Target
