@@ -35,18 +35,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BuffManagerLib">
-      <HintPath>C:\Games\wpe\Dropbox\lsharp\LeagueSharp\LeagueSharp\\System\BuffManagerLib.dll</HintPath>
-    </Reference>
     <Reference Include="LeagueSharp">
-      <HintPath>..\..\LeagueSharpLoader\bin\Release\System\LeagueSharp.dll</HintPath>
+      <HintPath>..\..\..\..\Desktop\LeagueSharpLoader\bin\Release\System\LeagueSharp.dll</HintPath>
     </Reference>
     <Reference Include="LeagueSharp.Common">
-      <HintPath>..\..\LeagueSharpLoader\bin\Release\System\LeagueSharp.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\LeagueSharpLoader\bin\Release\System\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\..\Desktop\LeagueSharpLoader\bin\Release\System\LeagueSharp.Common.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

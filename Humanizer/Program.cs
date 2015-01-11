@@ -22,9 +22,7 @@ namespace Humanizer
         private static void Game_OnGameLoad(EventArgs args)
         {
             Config = new Menu("Humanizer", "Humanizer", true);
-            Config.AddItem(new MenuItem("MovementDelay", "Movement Delay")).SetValue(new Slider(0, 200, 0));
-            Config.AddItem(new MenuItem("Enabled", "Spell Humanizer Enabled").SetValue(true));
-            Config.Item("Enabled").ValueChanged += Program_ValueChanged;
+            Config.AddItem(new MenuItem("MovementDelay", "Movement Delay")).SetValue(new Slider(80, 0, 400));
             Config.AddToMainMenu();
 
             Obj_AI_Base.OnIssueOrder += Obj_AI_Base_OnIssueOrder;
@@ -46,10 +44,6 @@ namespace Humanizer
             LastMove = Environment.TickCount;
         }
 
-        private static void Program_ValueChanged(object sender, OnValueChangeEventArgs e)
-        {
-            SpellHumanizer.Enabled = e.GetNewValue<bool>();
-        }
 
         private static float GetDelay()
         {
