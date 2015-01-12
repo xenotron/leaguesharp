@@ -9,7 +9,9 @@ namespace LeBlanc
     {
         private const string Name = "Combo";
         public static Menu LocalMenu;
-        public static Vector3 WPosition;
+        public static Vector3 WToPosition;
+        public static Vector3 WBackPosition;
+        public static readonly string LeblancWToObject = "LeBlanc_Base_W_mis.troy";
         public static readonly string LeBlancWObject = "LeBlanc_Base_W_return_indicator.troy";
 
         static Combo()
@@ -22,9 +24,9 @@ namespace LeBlanc
             //gapclose.AddItem(new MenuItem("Spacer", "This doesn't work yet"));
             //gapclose.AddItem(new MenuItem("GapCloseEnabled", "Use GapClose Combo").SetValue(true));
             //replace with damage calcs
-            gapclose.AddItem(new MenuItem("ComboDFG", "Only initiate with DFG").SetValue(false));
-            gapclose.AddItem(new MenuItem("TargetHP", "At Target HP %").SetValue(new Slider(40)));
-            gapclose.AddItem(new MenuItem("PlayerHP", "Min Player HP %").SetValue(new Slider(40)));
+            //gapclose.AddItem(new MenuItem("ComboDFG", "Only initiate with DFG").SetValue(true));
+            gapclose.AddItem(new MenuItem("TargetHP", "On Target HP < %").SetValue(new Slider(40)));
+            gapclose.AddItem(new MenuItem("PlayerHP", "On Self HP > %").SetValue(new Slider(40)));
 
             var comboQ = combo.AddSubMenu(new Menu("Q", "Q"));
             comboQ.AddItem(new MenuItem("ComboQ", "Use Q").SetValue(true));
@@ -57,7 +59,7 @@ namespace LeBlanc
 
             LocalMenu = combo;
 
-            //    Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             GameObject.OnCreate += GameObject_OnCreate;
             GameObject.OnDelete += GameObject_OnDelete;
             Game.OnGameUpdate += Game_OnGameUpdate;
@@ -135,11 +137,11 @@ namespace LeBlanc
 
             #endregion
 
-            /*       if (CastSecondW())
+            /*if (CastSecondW())
             {
                 return;
-            }
-            */
+            }*/
+
             if (CastR())
             {
                 return;
@@ -167,17 +169,17 @@ namespace LeBlanc
 
         private static bool CastW()
         {
-            var canCast = CanCast("W") && W.IsReady() && W.GetState(1);
-            var wRange = Target.IsValidTarget(W.Range + 100);
+            var canCast = CanCast("W") && W.IsReady(1);
+            var wRange = Target.IsValidTarget(W.Range);
             var lowHealth = Player.HealthPercentage() <= Menu.Item("ComboWMinHP").GetValue<Slider>().Value;
             return canCast && wRange && !lowHealth && W.Cast(Target).IsCast();
         }
 
         private static bool CastSecondW()
         {
-            var canCast = CanCast("W2") && W.IsReady() && W.GetState(2);
+            var canCast = CanCast("W2") && W.IsReady(2);
             var isLowHP = Player.HealthPercentage() <= Menu.Item("MiscW2HP").GetValue<Slider>().Value;
-            var moreEnemiesInRange = WPosition.CountEnemysInRange(600) > Player.CountEnemysInRange(600);
+            var moreEnemiesInRange = WBackPosition.CountEnemysInRange(600) > Player.CountEnemysInRange(600);
             var isFleeing = Program.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None;
             var spellDown = Menu.Item("ComboW2Spells").GetValue<bool>() && !Q.IsReady() && !E.IsReady() && !R.IsReady();
             var cast = canCast && (isLowHP || spellDown) && !moreEnemiesInRange && !isFleeing;
@@ -186,7 +188,7 @@ namespace LeBlanc
 
         private static bool CastE(HitChance hc)
         {
-            if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target))
+            if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target) || Player.IsDashing())
             {
                 return false;
             }
@@ -224,50 +226,76 @@ namespace LeBlanc
                 ComboLogic();
             }
 
-
-            //  Render.Circle.DrawCircle(Player.Position, W.Range + Items.DFG.Range + 100, System.Drawing.Color.Green);
-            /*  if (Target.IsValidTarget(W.Range + Items.DFG.Range + 100))
+            if (Target.IsValidTarget(W.Range * 2))
             {
-                var canCast = CanCast("W") && W.IsReady() && W.GetState(1) && R.IsReady();
+                var canCast = CanCast("W") && W.IsReady(1) && R.IsReady();
                 var isTargetLow = Target.HealthPercentage() <= Menu.Item("TargetHP").GetValue<Slider>().Value;
-                var isPlayerLow = Player.HealthPercentage() <= Menu.Item("PlayerHP").GetValue<Slider>().Value;
-                var canDFG = !CanCast("DFG") && (Items.DFG.HasItem() && Items.DFG.IsReady()) || (Items.BFT.HasItem() && Items.BFT.IsReady());
+                var isPlayerLow = Player.HealthPercentage() < Menu.Item("PlayerHP").GetValue<Slider>().Value;
+                var canDFG = (Items.DFG.HasItem() && Items.DFG.IsReady()) ||
+                             (Items.BFT.HasItem() && Items.BFT.IsReady());
 
                 if (!canCast || !isTargetLow || isPlayerLow || !canDFG)
                 {
+                    //Console.WriteLine("return");
                     return;
                 }
 
-                var pos = Player.Position.Extend(Target.Position, W.Range + 100);
+                var pos = Player.Position.Extend(Target.ServerPosition, W.Range + 100);
                 if (W.Cast(pos)) {}
-            }*/
+            }
         }
 
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             var unit = sender as Obj_AI_Hero;
 
-            if (unit == null || !unit.IsValid || !unit.IsMe || args.SData == null || !Enabled)
+            if (unit == null || !unit.IsValid || !unit.IsMe || !Enabled)
             {
                 return;
             }
 
-            Console.WriteLine(args.SData.Name);
-            //     Console.WriteLine(R.Instance.Name);
-            var castDFG = CanCast("Items") && Items.DFG.HasItem() && Items.DFG.IsReady() &&
-                          Target.IsValidTarget(Items.DFG.Range);
-
-            if (args.SData.Name == "LeblancSlide" && castDFG && R.IsReady())
+            if (args.SData.IsAutoAttack())
             {
-                Console.WriteLine(R.Instance.Name);
-                Items.DFG.Cast(Target);
                 return;
             }
 
-            if (args.SData.Name.Equals("DFG") && Target.IsValidTarget(W.Range + 100) && R.IsReady(SpellSlot.W))
+            var name = args.SData.Name;
+
+
+            if (name.Equals("LeblancSlide"))
             {
-                R.Cast(SpellSlot.R, Target);
+                Utility.DelayAction.Add(
+                    400, () =>
+                    {
+                        var castDFG = CanCast("Items") && Items.DFG.HasItem() && Items.DFG.IsReady();
+                        var castBFT = CanCast("Items") && Items.BFT.HasItem() && Items.BFT.IsReady();
+
+                        if (castDFG && Items.DFG.Cast(Target))
+                        {
+                            return;
+                        }
+
+                        if (castBFT && Items.BFT.Cast(Target)) {}
+                    });
+                return;
             }
+
+
+            Utility.DelayAction.Add(
+                400, () =>
+                {
+                    var canCastR = (name.Equals("DeathfireGrasp") || name.Equals("ItemBlackfireTorch")) &&
+                                   Target.IsValidTarget(W.Range) && R.IsReady(SpellSlot.W);
+
+                    if (!canCastR)
+                    {
+                        Console.WriteLine(Player.Distance(Target));
+                        Console.WriteLine("can't r");
+                        return;
+                    }
+
+                    R.Cast(SpellSlot.R, Target);
+                });
         }
 
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
@@ -277,7 +305,7 @@ namespace LeBlanc
                 return;
             }
 
-            WPosition = sender.Position;
+            WBackPosition = sender.Position;
         }
 
         private static void GameObject_OnDelete(GameObject sender, EventArgs args)
@@ -287,7 +315,7 @@ namespace LeBlanc
                 return;
             }
 
-            WPosition = Vector3.Zero;
+            WBackPosition = Vector3.Zero;
         }
 
         #endregion

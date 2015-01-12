@@ -111,7 +111,7 @@ namespace LeBlanc
 
         public static bool CastW(bool ult = false)
         {
-            var canCast = CanCast("W") && W.IsReady() && W.GetState(1);
+            var canCast = CanCast("W") && W.IsReady(1);
             var canCastUlt = ult && CanCast("RW") && R.IsReady(SpellSlot.W);
             var isLowMana = Player.ManaPercentage() <= Menu.Item("LaneClearWMana").GetValue<Slider>().Value;
             var minions = MinionManager.GetMinions(W.Range).Select(m => m.ServerPosition.To2D()).ToList();

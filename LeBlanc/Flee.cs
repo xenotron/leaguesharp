@@ -111,7 +111,7 @@ namespace LeBlanc
 
         private static bool CastW()
         {
-            return CanCast("W") && W.IsReady() && W.GetState(1) && W.Cast(GetCastPosition());
+            return CanCast("W") && W.IsReady(1) && W.Cast(GetCastPosition());
         }
 
         private static bool CastE(HitChance hc)

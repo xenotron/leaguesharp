@@ -129,7 +129,7 @@ namespace LeBlanc
 
         private static bool CastW(bool ult = false)
         {
-            var canCast = (ult && R.IsReady(SpellSlot.W)) || (W.IsReady() && W.GetState(1));
+            var canCast = (ult && R.IsReady(SpellSlot.W)) || (W.IsReady(1));
             var unit =
                 ObjectManager.Get<Obj_AI_Hero>()
                     .FirstOrDefault(

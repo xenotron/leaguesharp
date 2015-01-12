@@ -80,6 +80,8 @@ namespace LeBlanc
             draw.AddItem(new MenuItem("Draw1", "Draw W Range").SetValue(new Circle(false, Color.Red, W.Range)));
             draw.AddItem(new MenuItem("Draw2", "Draw E Range").SetValue(new Circle(true, Color.Purple, E.Range)));
             draw.AddItem(new MenuItem("DrawCD", "Draw on CD").SetValue(true));
+            draw.AddItem(
+                new MenuItem("DrawWCombo", "Draw GapCloser Combo").SetValue(new Circle(true, Color.Orange, W.Range * 2)));
             draw.AddItem(new MenuItem("DamageIndicator", "Damage Indicator").SetValue(true));
 
             var misc = Menu.AddSubMenu(new Menu("Misc Settings", "Misc"));
@@ -165,9 +167,18 @@ namespace LeBlanc
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (Combo.WPosition != Vector3.Zero)
+            if (Combo.WBackPosition != Vector3.Zero)
             {
-                Render.Circle.DrawCircle(Combo.WPosition, 200, Color.Red, 8);
+                Render.Circle.DrawCircle(Combo.WBackPosition, 200, Color.Red, 8);
+            }
+
+            var wCircle = Menu.Item("DrawWCombo").GetValue<Circle>();
+            var dfgReady = (Items.DFG.HasItem() && Items.DFG.IsReady()) || (Items.BFT.HasItem() && Items.BFT.IsReady());
+            var canDraw = wCircle.Active && W.IsReady(1) && R.IsReady() && dfgReady;
+            
+            if (canDraw)
+            {
+                Render.Circle.DrawCircle(Player.Position, wCircle.Radius, wCircle.Color);
             }
 
             foreach (var spell in

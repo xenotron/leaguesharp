@@ -58,11 +58,6 @@ namespace LeBlanc
             spell.Cast(position + randomVector);
         }
 
-        public static bool GetState(this Spell spell, int state)
-        {
-            return spell.Instance.ToggleState == state;
-        }
-
         public static SpellSlot GetSpellSlot(this Spell spell)
         {
             if (!spell.IsReady() || spell.Instance.Name == null)
@@ -84,7 +79,7 @@ namespace LeBlanc
             }
         }
 
-        public static void SetSpell(this Spell spell, SpellSlot slot)
+        private static void SetSpell(this Spell spell, SpellSlot slot)
         {
             switch (slot)
             {
@@ -132,7 +127,7 @@ namespace LeBlanc
             };
         }
 
-        public static int GetToggleState(this Spell spell)
+        private static int GetToggleState(this Spell spell)
         {
             return spell.Instance.ToggleState;
         }
@@ -163,6 +158,11 @@ namespace LeBlanc
         public static bool IsReady(this Spell spell, SpellSlot slot)
         {
             return spell.IsReady() && spell.GetSpellSlot() == slot;
+        }
+
+        public static bool IsReady(this Spell spell, int stage)
+        {
+            return spell.IsReady() && spell.GetToggleState() == stage;
         }
 
         public static HitChance GetHitChance(string name)

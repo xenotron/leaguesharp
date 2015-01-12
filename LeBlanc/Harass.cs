@@ -88,7 +88,7 @@ namespace LeBlanc
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            if (!Enabled || !Target.IsValidTarget(1500))
+            if (!Enabled || !Target.IsValidTarget(Q.Range))
             {
                 return;
             }
@@ -123,9 +123,9 @@ namespace LeBlanc
 
         private static bool CastW()
         {
-            var canCast = CanCast("W") && W.IsReady() && W.GetState(1);
+            var canCast = CanCast("W") && W.IsReady(1);
             var qwRange = Target.IsValidTarget(Q.Range + W.Range);
-            var wRange = Target.IsValidTarget(W.Range + 100);
+            var wRange = Target.IsValidTarget(W.Range);
 
             if (!canCast)
             {
@@ -139,7 +139,7 @@ namespace LeBlanc
 
             if (qwRange)
             {
-                return W.Cast(Player.ServerPosition.Extend(Target.ServerPosition, W.Range + 100));
+                return W.Cast(Player.ServerPosition.Extend(Target.ServerPosition, W.Range));
             }
 
             return false;
@@ -147,7 +147,8 @@ namespace LeBlanc
 
         private static bool CastSecondW()
         {
-            var canCast = CanCast("W2") && W.IsReady() && W.GetState(2);
+            var canCast = CanCast("W2") && W.IsReady(2);
+            
             if (!canCast)
             {
                 return false;
@@ -160,7 +161,7 @@ namespace LeBlanc
 
         private static bool CastE(HitChance hc)
         {
-            if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target))
+            if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target) || Player.IsDashing())
             {
                 return false;
             }
