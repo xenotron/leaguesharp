@@ -201,7 +201,7 @@ namespace TUrgot
         private static void CastQ(Obj_AI_Base target, string mode)
         {
             if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() &&
-                target.IsValidTarget(target.HasBuff("urgotcorrosivedebuff", true) ? Q2.Range : Q.Range))
+                target.IsValidTarget(Q.Range))
             {
                 Q.Cast(target.ServerPosition);
             }
