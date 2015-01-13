@@ -31,7 +31,7 @@ namespace LeBlanc
                         new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
 
 
-          //  harass.AddItem(new MenuItem("HarassCombo", "W->Q->E->W Combo").SetValue(true));
+            //  harass.AddItem(new MenuItem("HarassCombo", "W->Q->E->W Combo").SetValue(true));
 
             /* var harassR = harass.AddSubMenu(new Menu("R", "R"));
             harassR.AddItem(new MenuItem("HarassR", "Use R").SetValue(true));
@@ -86,6 +86,11 @@ namespace LeBlanc
             get { return Spells.R; }
         }
 
+        private static HitChance EHitChance
+        {
+            get { return Utils.GetHitChance("HarassEHC"); }
+        }
+
         private static void Game_OnGameUpdate(EventArgs args)
         {
             if (!Enabled || !Target.IsValidTarget(Q.Range))
@@ -108,7 +113,7 @@ namespace LeBlanc
                 return;
             }
 
-            if (CastE(Utils.GetHitChance("HarassEHC")))
+            if (CastE())
             {
                 return;
             }
@@ -118,7 +123,7 @@ namespace LeBlanc
 
         private static bool CastQ()
         {
-            return CanCast("Q") && Q.IsReady() && Q.CanCast(Target) && Q.Cast(Target).IsCast();
+            return CanCast("Q") && Q.IsReady() && Q.CanCast(Target) && Q.Cast(Target).IsCasted();
         }
 
         private static bool CastW()
@@ -134,7 +139,7 @@ namespace LeBlanc
 
             if (wRange)
             {
-                return W.Cast(Target).IsCast();
+                return W.Cast(Target).IsCasted();
             }
 
             if (qwRange)
@@ -148,7 +153,7 @@ namespace LeBlanc
         private static bool CastSecondW()
         {
             var canCast = CanCast("W2") && W.IsReady(2);
-            
+
             if (!canCast)
             {
                 return false;
@@ -159,15 +164,16 @@ namespace LeBlanc
             return mode == 1 ? W.Cast() : Target.HasEBuff() && W.Cast();
         }
 
-        private static bool CastE(HitChance hc)
+        private static bool CastE(HitChance hc = HitChance.Low)
         {
             if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target) || Player.IsDashing())
             {
                 return false;
             }
 
+            var chance = hc == HitChance.Low ? Utils.GetHitChance("HarassEHC") : hc;
             var pred = E.GetPrediction(Target);
-            return pred.Hitchance >= hc && E.Cast(pred.CastPosition);
+            return pred.Hitchance >= chance && E.Cast(pred.CastPosition);
         }
 
         public static bool CanCast(string spell)

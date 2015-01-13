@@ -150,7 +150,7 @@ namespace LeBlanc
             return spell.CastIfHitchanceEquals(unit, hitchance);
         }
 
-        public static bool IsCast(this Spell.CastStates state)
+        public static bool IsCasted(this Spell.CastStates state)
         {
             return state == Spell.CastStates.SuccessfullyCasted;
         }

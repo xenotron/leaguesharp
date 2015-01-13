@@ -106,7 +106,7 @@ namespace LeBlanc
                             minion.IsValidTarget(Q.Range) &&
                             minion.Health < Player.GetDamageSpell(minion, SpellSlot.Q).CalculatedDamage);
 
-            return unit.IsValidTarget(Q.Range) && Q.Cast(unit).IsCast();
+            return unit.IsValidTarget(Q.Range) && Q.Cast(unit).IsCasted();
         }
 
         public static bool CastW(bool ult = false)

@@ -9,9 +9,7 @@ namespace LeBlanc
     {
         private const string Name = "Combo";
         public static Menu LocalMenu;
-        public static Vector3 WToPosition;
-        public static Vector3 WBackPosition;
-        public static readonly string LeblancWToObject = "LeBlanc_Base_W_mis.troy";
+        public static WPosition WBackPosition;
         public static readonly string LeBlancWObject = "LeBlanc_Base_W_return_indicator.troy";
 
         static Combo()
@@ -22,9 +20,8 @@ namespace LeBlanc
 
             var gapclose = combo.AddSubMenu(new Menu("GapClose", "Gap Close Combo"));
             //gapclose.AddItem(new MenuItem("Spacer", "This doesn't work yet"));
-            //gapclose.AddItem(new MenuItem("GapCloseEnabled", "Use GapClose Combo").SetValue(true));
+            gapclose.AddItem(new MenuItem("GapCloseEnabled", "Use GapClose Combo").SetValue(true));
             //replace with damage calcs
-            //gapclose.AddItem(new MenuItem("ComboDFG", "Only initiate with DFG").SetValue(true));
             gapclose.AddItem(new MenuItem("TargetHP", "On Target HP < %").SetValue(new Slider(40)));
             gapclose.AddItem(new MenuItem("PlayerHP", "On Self HP > %").SetValue(new Slider(40)));
 
@@ -40,6 +37,7 @@ namespace LeBlanc
 
             var comboE = combo.AddSubMenu(new Menu("E", "E"));
             comboE.AddItem(new MenuItem("ComboE", "Use E").SetValue(true));
+            comboE.AddItem(new MenuItem("ComboEStart", "Start Combo with E").SetValue(false));
             comboE.AddItem(
                 new MenuItem("ComboEHC", "MinHitChance").SetValue(
                     new StringList(
@@ -48,10 +46,10 @@ namespace LeBlanc
             var comboR = combo.AddSubMenu(new Menu("R", "R"));
             comboR.AddItem(new MenuItem("ComboR", "Use R").SetValue(true));
             comboR.AddItem(
-                new MenuItem("ComboUltMode", "Ult Mode").SetValue(new StringList(new[] { SpellSlot.Q.ToString() })));
-            // SpellSlot.W.ToString(), SpellSlot.E.ToString() })));
+                new MenuItem("ComboRMode", "Ult Mode").SetValue(
+                    new StringList(new[] { SpellSlot.Q.ToString(), SpellSlot.W.ToString(), SpellSlot.E.ToString() })));
+            // ));
 
-            combo.AddItem(new MenuItem("ComboQRange", "Only Combo in Q Range").SetValue(true));
             combo.AddItem(new MenuItem("ComboItems", "Use Items").SetValue(true));
             combo.AddItem(new MenuItem("ComboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
 
@@ -105,10 +103,18 @@ namespace LeBlanc
             get { return Program.R; }
         }
 
+        private static HitChance EHitChance
+        {
+            get { return Utils.GetHitChance("ComboEHC"); }
+        }
+
         private static void ComboLogic()
         {
             var spellsUp = Q.IsReady() && W.IsReady() && E.IsReady() && R.IsReady();
             var d = Player.Distance(Target);
+            var eFirst = Menu.Item("ComboEStart").GetValue<bool>();
+            var castRE = R.IsReady(SpellSlot.E) && GetMenuUlt() == SpellSlot.E;
+            var qFirst = Q.IsInRange(Target) && !castRE;
 
             #region Items
 
@@ -142,29 +148,32 @@ namespace LeBlanc
                 return;
             }*/
 
+            if (eFirst && CastE())
+            {
+                return;
+            }
+
+            if (qFirst && CastQ())
+            {
+                return;
+            }
+
             if (CastR())
             {
                 return;
             }
 
-            if (CastQ())
-            {
-                return;
-            }
-
             if (CastW())
-
             {
                 return;
             }
 
-
-            if (CastE(Utils.GetHitChance("ComboEHC"))) {}
+            if (CastE()) {}
         }
 
         private static bool CastQ()
         {
-            return CanCast("Q") && Q.IsReady() && Q.CanCast(Target) && Q.Cast(Target).IsCast();
+            return CanCast("Q") && Q.IsReady() && Q.CanCast(Target) && Q.Cast(Target).IsCasted();
         }
 
         private static bool CastW()
@@ -172,21 +181,21 @@ namespace LeBlanc
             var canCast = CanCast("W") && W.IsReady(1);
             var wRange = Target.IsValidTarget(W.Range);
             var lowHealth = Player.HealthPercentage() <= Menu.Item("ComboWMinHP").GetValue<Slider>().Value;
-            return canCast && wRange && !lowHealth && W.Cast(Target).IsCast();
+            return canCast && wRange && !lowHealth && W.Cast(Target).IsCasted();
         }
 
         private static bool CastSecondW()
         {
             var canCast = CanCast("W2") && W.IsReady(2);
             var isLowHP = Player.HealthPercentage() <= Menu.Item("MiscW2HP").GetValue<Slider>().Value;
-            var moreEnemiesInRange = WBackPosition.CountEnemysInRange(600) > Player.CountEnemysInRange(600);
+            var moreEnemiesInRange = WBackPosition.Position.CountEnemysInRange(600) > Player.CountEnemysInRange(600);
             var isFleeing = Program.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None;
             var spellDown = Menu.Item("ComboW2Spells").GetValue<bool>() && !Q.IsReady() && !E.IsReady() && !R.IsReady();
             var cast = canCast && (isLowHP || spellDown) && !moreEnemiesInRange && !isFleeing;
             return cast && W.Cast();
         }
 
-        private static bool CastE(HitChance hc)
+        private static bool CastE()
         {
             if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target) || Player.IsDashing())
             {
@@ -194,12 +203,35 @@ namespace LeBlanc
             }
 
             var pred = E.GetPrediction(Target);
-            return pred.Hitchance >= hc && E.Cast(pred.CastPosition);
+            return pred.Hitchance >= EHitChance && E.Cast(pred.CastPosition);
         }
 
         private static bool CastR()
         {
-            return CanCast("R") && R.IsReady(SpellSlot.Q) && Q.IsInRange(Target) && R.Cast(SpellSlot.Q, Target).IsCast();
+            var slot = GetMenuUlt();
+            var canCast = CanCast("R") && R.IsReady(slot);
+
+            if (!canCast)
+            {
+                return false;
+            }
+
+            if (slot == SpellSlot.Q && Q.IsInRange(Target))
+            {
+                return R.Cast(SpellSlot.Q, Target).IsCasted();
+            }
+
+            if (slot == SpellSlot.W && W.IsInRange(Target))
+            {
+                return R.Cast(SpellSlot.W, Target).IsCasted();
+            }
+
+            if (slot == SpellSlot.E && E.IsInRange(Target))
+            {
+                return R.CastIfHitchanceEquals(SpellSlot.E, Target, EHitChance);
+            }
+
+            return false;
         }
 
         public static bool CanCast(string spell)
@@ -209,7 +241,7 @@ namespace LeBlanc
 
         private static float GetComboRange()
         {
-            return Menu.Item("ComboQRange").GetValue<bool>() ? Q.Range : E.Range;
+            return Menu.Item("ComboEStart").GetValue<bool>() ? E.Range : Q.Range;
         }
 
         #region Events 
@@ -226,7 +258,7 @@ namespace LeBlanc
                 ComboLogic();
             }
 
-            if (Target.IsValidTarget(W.Range * 2))
+            if (Menu.Item("GapCloseEnabled").GetValue<bool>() && Target.IsValidTarget(W.Range * 2))
             {
                 var canCast = CanCast("W") && W.IsReady(1) && R.IsReady();
                 var isTargetLow = Target.HealthPercentage() <= Menu.Item("TargetHP").GetValue<Slider>().Value;
@@ -298,6 +330,11 @@ namespace LeBlanc
                 });
         }
 
+        private static SpellSlot GetMenuUlt()
+        {
+            return (SpellSlot) Menu.Item("ComboR").GetValue<StringList>().SelectedIndex;
+        }
+
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
             if (sender == null || !sender.IsValid || !sender.Name.Equals(LeBlancWObject))
@@ -305,7 +342,7 @@ namespace LeBlanc
                 return;
             }
 
-            WBackPosition = sender.Position;
+            WBackPosition = new WPosition(sender);
         }
 
         private static void GameObject_OnDelete(GameObject sender, EventArgs args)
@@ -315,9 +352,42 @@ namespace LeBlanc
                 return;
             }
 
-            WBackPosition = Vector3.Zero;
+            WBackPosition = new WPosition();
         }
 
         #endregion
+    }
+
+    public class WPosition
+    {
+        public float EndTick;
+        public Vector3 Position;
+        public float StartTick;
+        public GameObject Unit;
+
+        public WPosition()
+        {
+            Position = Vector3.Zero;
+            StartTick = 0;
+            EndTick = 0;
+        }
+
+        public WPosition(GameObject unit)
+        {
+            Unit = unit;
+            Position = unit.Position;
+            StartTick = Environment.TickCount;
+            EndTick = StartTick + 8000f;
+        }
+
+        public bool IsActive()
+        {
+            return Unit != null && Unit.IsValid && Environment.TickCount - EndTick < 0;
+        }
+
+        public float GetTime()
+        {
+            return (EndTick - Environment.TickCount) / 1000f;
+        }
     }
 }

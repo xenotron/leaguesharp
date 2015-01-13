@@ -167,9 +167,9 @@ namespace LeBlanc
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (Combo.WBackPosition != Vector3.Zero)
+            if (Combo.WBackPosition.Position != Vector3.Zero)
             {
-                Render.Circle.DrawCircle(Combo.WBackPosition, 200, Color.Red, 8);
+                Render.Circle.DrawCircle(Combo.WBackPosition.Position, 200, Color.Red, 8);
             }
 
             var wCircle = Menu.Item("DrawWCombo").GetValue<Circle>();
@@ -287,6 +287,8 @@ namespace LeBlanc
             {
                 damage += Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
             }
+
+            damage += Player.GetAutoAttackDamage(enemy, true);
 
             return (float) damage;
         }

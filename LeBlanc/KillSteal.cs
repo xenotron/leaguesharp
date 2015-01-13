@@ -124,7 +124,7 @@ namespace LeBlanc
                     .FirstOrDefault(
                         obj => obj.IsValidTarget(Q.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.Q));
 
-            return canCast && unit.IsValidTarget(Q.Range) && (ult ? R.Cast(SpellSlot.Q, unit).IsCast() : Q.Cast(unit).IsCast());
+            return canCast && unit.IsValidTarget(Q.Range) && (ult ? R.Cast(SpellSlot.Q, unit).IsCasted() : Q.Cast(unit).IsCasted());
         }
 
         private static bool CastW(bool ult = false)
@@ -135,7 +135,7 @@ namespace LeBlanc
                     .FirstOrDefault(
                         obj => obj.IsValidTarget(W.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.W));
 
-            return canCast && unit.IsValidTarget(W.Range + 100) && (ult ? R.Cast(unit).IsCast() : W.Cast(unit).IsCast());
+            return canCast && unit.IsValidTarget(W.Range + 100) && (ult ? R.Cast(unit).IsCasted() : W.Cast(unit).IsCasted());
         }
 
         private static bool CastE(bool ult = false)
