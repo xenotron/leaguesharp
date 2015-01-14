@@ -167,7 +167,9 @@ namespace LeBlanc
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (Combo.WBackPosition.Position != Vector3.Zero)
+            var wBackCircle = Combo.WBackPosition;
+
+            if (wBackCircle != null && wBackCircle.Position != Vector3.Zero)
             {
                 Render.Circle.DrawCircle(Combo.WBackPosition.Position, 200, Color.Red, 8);
             }
@@ -175,7 +177,7 @@ namespace LeBlanc
             var wCircle = Menu.Item("DrawWCombo").GetValue<Circle>();
             var dfgReady = (Items.DFG.HasItem() && Items.DFG.IsReady()) || (Items.BFT.HasItem() && Items.BFT.IsReady());
             var canDraw = wCircle.Active && W.IsReady(1) && R.IsReady() && dfgReady;
-            
+
             if (canDraw)
             {
                 Render.Circle.DrawCircle(Player.Position, wCircle.Radius, wCircle.Color);

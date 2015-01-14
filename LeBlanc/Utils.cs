@@ -92,7 +92,7 @@ namespace LeBlanc
                     spell.SetSkillshot(.5f, 100, 2000, false, SkillshotType.SkillshotCircle);
                     return;
                 case SpellSlot.E:
-                    spell = new Spell(spell.Slot, 970);
+                    spell = new Spell(spell.Slot, 950);
                     spell.SetSkillshot(.366f, 70, 1600, true, SkillshotType.SkillshotLine);
                     return;
             }

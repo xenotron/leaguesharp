@@ -228,7 +228,10 @@ namespace LeBlanc
 
             if (slot == SpellSlot.E && E.IsInRange(Target))
             {
-                return R.CastIfHitchanceEquals(SpellSlot.E, Target, EHitChance);
+                E.Slot = SpellSlot.R;
+                var cast = E.CastIfHitchanceEquals(Target, EHitChance);
+                E.Slot = SpellSlot.E;
+                return cast;
             }
 
             return false;
@@ -332,7 +335,7 @@ namespace LeBlanc
 
         private static SpellSlot GetMenuUlt()
         {
-            return (SpellSlot) Menu.Item("ComboR").GetValue<StringList>().SelectedIndex;
+            return (SpellSlot) Menu.Item("ComboRMode").GetValue<StringList>().SelectedIndex;
         }
 
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
