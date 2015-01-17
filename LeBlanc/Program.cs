@@ -44,7 +44,7 @@ namespace LeBlanc
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            if (!Player.ChampionName.Equals("Leblanc"))
+            if (!Player.IsChampion("Leblanc"))
             {
                 return;
             }
@@ -120,7 +120,7 @@ namespace LeBlanc
 
         private static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            var unit = gapcloser.Sender as Obj_AI_Hero;
+            var unit = gapcloser.Sender;
 
             if (!Menu.Item("Interrupt").GetValue<bool>() || !unit.IsValidTarget(E.Range) || !E.IsReady())
             {
@@ -219,25 +219,25 @@ namespace LeBlanc
             {
                 var d = 0d;
                 var level = R.Instance.Level;
-                var maxDamage = new double[] { 200, 400, 600 }[level] + 1.3f * Player.FlatMagicDamageMod;
+                var maxDamage = new double[] { 200, 400, 600 }[level - 1] + 1.3f * Player.FlatMagicDamageMod;
 
                 switch (R.GetSpellSlot())
                 {
                     case SpellSlot.Q:
                         var qDmg = Player.CalcDamage(
                             enemy, Damage.DamageType.Magical,
-                            new double[] { 100, 200, 300 }[level] + .65f * Player.FlatMagicDamageMod);
+                            new double[] { 100, 200, 300 }[level - 1] + .65f * Player.FlatMagicDamageMod);
                         d = qDmg > maxDamage ? maxDamage : qDmg;
                         break;
                     case SpellSlot.W:
                         d = Player.CalcDamage(
                             enemy, Damage.DamageType.Magical,
-                            new double[] { 150, 300, 450 }[level] + .975f * Player.FlatMagicDamageMod);
+                            new double[] { 150, 300, 450 }[level - 1] + .975f * Player.FlatMagicDamageMod);
                         break;
                     case SpellSlot.E:
                         var eDmg = Player.CalcDamage(
                             enemy, Damage.DamageType.Magical,
-                            new double[] { 100, 200, 300 }[level] + .65f * Player.FlatMagicDamageMod);
+                            new double[] { 100, 200, 300 }[level - 1] + .65f * Player.FlatMagicDamageMod);
                         d = eDmg > maxDamage ? maxDamage : eDmg;
                         break;
                 }

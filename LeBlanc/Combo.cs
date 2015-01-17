@@ -85,22 +85,22 @@ namespace LeBlanc
 
         private static Spell Q
         {
-            get { return Program.Q; }
+            get { return Spells.Q; }
         }
 
         private static Spell W
         {
-            get { return Program.W; }
+            get { return Spells.W; }
         }
 
         private static Spell E
         {
-            get { return Program.E; }
+            get { return Spells.E; }
         }
 
         private static Spell R
         {
-            get { return Program.R; }
+            get { return Spells.R; }
         }
 
         private static HitChance EHitChance
