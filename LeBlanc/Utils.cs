@@ -180,6 +180,11 @@ namespace LeBlanc
             return HitChance.Medium;
         }
 
+        public static bool IsValidPet(this Obj_AI_Base pet)
+        {
+            return pet.IsValid && !pet.IsDead && pet.Health > 0 && pet.CanMove;
+        }
+
         public static Obj_AI_Hero GetTarget()
         {
             var target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);

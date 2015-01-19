@@ -12,7 +12,7 @@ namespace LeBlanc
         {
             #region Menu
 
-            var clone =  new Menu("Clone Settings", "Clone");
+            var clone = new Menu("Clone Settings", "Clone");
             clone.AddItem(new MenuItem("CloneEnabled", "Enabled").SetValue(true));
             clone.AddItem(
                 new MenuItem("CloneMode", "Mode").SetValue(
@@ -53,15 +53,12 @@ namespace LeBlanc
             }
 
             var pet = Player.Pet as Obj_AI_Base;
-            var isPetValid = pet != null && pet.IsValid && !pet.IsDead && pet.Health > 0 && pet.CanMove;
+            var mode = Menu.Item("CloneMode").GetValue<StringList>().SelectedIndex;
 
-            if (!isPetValid)
+            if (pet == null || !pet.IsValidPet())
             {
                 return;
             }
-
-
-            var mode = Menu.SubMenu("Clone").Item("Mode").GetValue<StringList>().SelectedIndex;
 
             switch (mode)
             {
@@ -70,7 +67,8 @@ namespace LeBlanc
                     Utility.DelayAction.Add(200, () => { pet.IssueOrder(GameObjectOrder.MovePet, pos); });
                     break;
                 case 1: //toward target
-                    if (pet.CanAttack && !pet.IsWindingUp && Target.IsValidTarget(800)) // && !pet.IsAutoAttacking)
+                    if (pet.CanAttack && !pet.IsWindingUp && !pet.Spellbook.IsAutoAttacking &&
+                        Target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(pet)))
                     {
                         pet.IssueOrder(GameObjectOrder.AutoAttackPet, Target);
                     }
