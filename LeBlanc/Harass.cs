@@ -16,12 +16,14 @@ namespace LeBlanc
             var harass = new Menu(Name + " Settings", Name);
             var harassQ = harass.AddSubMenu(new Menu("Q", "Q"));
             harassQ.AddItem(new MenuItem("HarassQ", "Use Q").SetValue(true));
+            harassQ.AddItem(new MenuItem("HarassQMana", "Min Mana %").SetValue(new Slider(40)));
 
             var harassW = harass.AddSubMenu(new Menu("W", "W"));
             harassW.AddItem(new MenuItem("HarassW", "Use W").SetValue(true));
             harassW.AddItem(new MenuItem("HarassW2", "Use Second W").SetValue(true));
             harassW.AddItem(
                 new MenuItem("HarassW2Mode", "Second W Setting").SetValue(new StringList(new[] { "Auto", "After E" })));
+            harassW.AddItem(new MenuItem("HarassWMana", "Min Mana %").SetValue(new Slider(40)));
 
             var harassE = harass.AddSubMenu(new Menu("E", "E"));
             harassE.AddItem(new MenuItem("HarassE", "Use E").SetValue(true));
@@ -29,7 +31,7 @@ namespace LeBlanc
                 new MenuItem("HarassEHC", "MinHitChance").SetValue(
                     new StringList(
                         new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
-
+            harassE.AddItem(new MenuItem("HarassEMana", "Min Mana %").SetValue(new Slider(40)));
 
             //  harass.AddItem(new MenuItem("HarassCombo", "W->Q->E->W Combo").SetValue(true));
 
@@ -152,7 +154,7 @@ namespace LeBlanc
 
         private static bool CastSecondW()
         {
-            var canCast = CanCast("W2") && W.IsReady(2);
+            var canCast = LocalMenu.Item("HarassW2").GetValue<bool>() && W.IsReady(2);
 
             if (!canCast)
             {
@@ -178,7 +180,9 @@ namespace LeBlanc
 
         public static bool CanCast(string spell)
         {
-            return Menu.Item(Name + spell).GetValue<bool>();
+            var cast = Menu.Item(Name + spell).GetValue<bool>();
+            var lowMana = Player.ManaPercentage() < Menu.Item(Name + spell + "Mana").GetValue<Slider>().Value;
+            return cast && !lowMana;
         }
     }
 }

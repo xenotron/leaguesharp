@@ -218,7 +218,7 @@ namespace LeBlanc
             if (R.IsReady())
             {
                 var d = 0d;
-                var level = R.Instance.Level;
+                var level = Player.Spellbook.GetSpell(SpellSlot.R).Level;
                 var maxDamage = new double[] { 200, 400, 600 }[level - 1] + 1.3f * Player.FlatMagicDamageMod;
 
                 switch (R.GetSpellSlot())
