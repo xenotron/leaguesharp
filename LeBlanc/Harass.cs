@@ -8,6 +8,7 @@ namespace LeBlanc
     {
         private const string Name = "Harass";
         public static Menu LocalMenu;
+        private static Obj_AI_Hero CurrentTarget;
 
         static Harass()
         {
@@ -88,14 +89,10 @@ namespace LeBlanc
             get { return Spells.R; }
         }
 
-        private static HitChance EHitChance
-        {
-            get { return Utils.GetHitChance("HarassEHC"); }
-        }
-
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            if (!Enabled || !Target.IsValidTarget(Q.Range))
+            CurrentTarget = Target;
+            if (!Enabled || !CurrentTarget.IsValidTarget(Q.Range))
             {
                 return;
             }
@@ -125,14 +122,14 @@ namespace LeBlanc
 
         private static bool CastQ()
         {
-            return CanCast("Q") && Q.IsReady() && Q.CanCast(Target) && Q.Cast(Target).IsCasted();
+            return CanCast("Q") && Q.IsReady() && Q.CanCast(CurrentTarget) && Q.Cast(CurrentTarget).IsCasted();
         }
 
         private static bool CastW()
         {
             var canCast = CanCast("W") && W.IsReady(1);
-            var qwRange = Target.IsValidTarget(Q.Range + W.Range);
-            var wRange = Target.IsValidTarget(W.Range);
+            var qwRange = CurrentTarget.IsValidTarget(Q.Range + W.Range);
+            var wRange = CurrentTarget.IsValidTarget(W.Range);
 
             if (!canCast)
             {
@@ -141,12 +138,12 @@ namespace LeBlanc
 
             if (wRange)
             {
-                return W.Cast(Target).IsCasted();
+                return W.Cast(CurrentTarget).IsCasted();
             }
 
             if (qwRange)
             {
-                return W.Cast(Player.ServerPosition.Extend(Target.ServerPosition, W.Range));
+                return W.Cast(Player.ServerPosition.Extend(CurrentTarget.ServerPosition, W.Range));
             }
 
             return false;
@@ -163,18 +160,18 @@ namespace LeBlanc
 
             var mode = Menu.Item("HarassW2Mode").GetValue<StringList>().SelectedIndex;
 
-            return mode == 1 ? W.Cast() : Target.HasEBuff() && W.Cast();
+            return mode == 1 ? W.Cast() : CurrentTarget.HasEBuff() && W.Cast();
         }
 
         private static bool CastE(HitChance hc = HitChance.Low)
         {
-            if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target) || Player.IsDashing())
+            if (!CanCast("E") || !E.IsReady() || !E.CanCast(CurrentTarget) || Player.IsDashing())
             {
                 return false;
             }
 
             var chance = hc == HitChance.Low ? Utils.GetHitChance("HarassEHC") : hc;
-            var pred = E.GetPrediction(Target);
+            var pred = E.GetPrediction(CurrentTarget);
             return pred.Hitchance >= chance && E.Cast(pred.CastPosition);
         }
 
