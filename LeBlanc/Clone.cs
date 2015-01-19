@@ -37,11 +37,6 @@ namespace LeBlanc
             get { return !Player.IsDead && Menu.Item("CloneEnabled").GetValue<bool>(); }
         }
 
-        private static Obj_AI_Hero Target
-        {
-            get { return Utils.GetTarget(); }
-        }
-
         private static Obj_AI_Hero Player
         {
             get { return ObjectManager.Player; }
@@ -68,15 +63,16 @@ namespace LeBlanc
 
                 var pet = Pet; //Player.Pet as Obj_AI_Base;
                 var mode = Menu.Item("CloneMode").GetValue<StringList>().SelectedIndex;
+                var target = TargetSelector.GetTarget(800, TargetSelector.DamageType.Physical, true, null, pet.Position);
 
-                if (pet == null || !pet.IsValid) //!pet.IsValidPet()) //|| !pet.IsValidPet())
+                if (!pet.IsValid) //!pet.IsValidPet()) //|| !pet.IsValidPet())
                 {
                     return;
                 }
 
                 if (mode == 1 &&
                     !(pet.CanAttack && !pet.IsWindingUp && !pet.Spellbook.IsAutoAttacking &&
-                      Target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(pet))))
+                      target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(pet))))
                 {
                     mode = 0;
                 }
@@ -90,7 +86,7 @@ namespace LeBlanc
                         Utility.DelayAction.Add(200, () => { pet.IssueOrder(GameObjectOrder.MovePet, pos); });
                         break;
                     case 1: //toward target
-                        pet.IssueOrder(GameObjectOrder.AutoAttackPet, Target);
+                        pet.IssueOrder(GameObjectOrder.AutoAttackPet, target);
                         break;
                     case 2: //away from player
                         Utility.DelayAction.Add(

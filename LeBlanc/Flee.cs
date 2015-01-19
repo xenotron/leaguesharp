@@ -47,11 +47,6 @@ namespace LeBlanc
             get { return !Player.IsDead && Menu.Item(Name + "Key").GetValue<KeyBind>().Active; }
         }
 
-        private static Obj_AI_Hero Target
-        {
-            get { return Utils.GetTarget(); }
-        }
-
         private static Obj_AI_Hero Player
         {
             get { return ObjectManager.Player; }
@@ -116,12 +111,13 @@ namespace LeBlanc
 
         private static bool CastE(HitChance hc)
         {
-            if (!CanCast("E") || !E.IsReady() || !E.CanCast(Target))
+            var target = Utils.GetTarget(E.Range);
+            if (!CanCast("E") || !E.IsReady() || !target.IsValidTarget(E.Range))
             {
                 return false;
             }
 
-            var pred = E.GetPrediction(Target);
+            var pred = E.GetPrediction(target);
             return pred.Hitchance >= hc && E.Cast(pred.CastPosition);
         }
 

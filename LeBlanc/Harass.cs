@@ -59,11 +59,6 @@ namespace LeBlanc
             get { return !Player.IsDead && Program.Menu.Item("HarassKey").GetValue<KeyBind>().Active; }
         }
 
-        private static Obj_AI_Hero Target
-        {
-            get { return Utils.GetTarget(); }
-        }
-
         private static Obj_AI_Hero Player
         {
             get { return ObjectManager.Player; }
@@ -91,7 +86,8 @@ namespace LeBlanc
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            CurrentTarget = Target;
+            CurrentTarget = Utils.GetTarget(E.Range);
+
             if (!Enabled || !CurrentTarget.IsValidTarget(Q.Range))
             {
                 return;

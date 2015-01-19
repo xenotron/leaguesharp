@@ -185,12 +185,9 @@ namespace LeBlanc
             return pet.IsValid && !pet.IsDead && pet.Health > 0 && pet.CanMove;
         }
 
-        public static Obj_AI_Hero GetTarget()
+        public static Obj_AI_Hero GetTarget(float range)
         {
-            var target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
-            return target.IsValidTarget(1500)
-                ? target
-                : TargetSelector.GetTarget(Spells.W.Range * 2, TargetSelector.DamageType.Magical);
+            return TargetSelector.GetTarget(range, TargetSelector.DamageType.Magical);
         }
 
         public static void Troll()

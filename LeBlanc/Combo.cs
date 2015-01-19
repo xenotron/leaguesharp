@@ -74,11 +74,6 @@ namespace LeBlanc
             get { return !Player.IsDead && Menu.Item(Name + "Key").GetValue<KeyBind>().Active; }
         }
 
-        private static Obj_AI_Hero Target
-        {
-            get { return Utils.GetTarget(); }
-        }
-
         private static Obj_AI_Hero Player
         {
             get { return ObjectManager.Player; }
@@ -189,7 +184,7 @@ namespace LeBlanc
         {
             var canCast = CanCast("W2") && W.IsReady(2);
             var isLowHP = Player.HealthPercentage() <= Menu.Item("MiscW2HP").GetValue<Slider>().Value;
-            var moreEnemiesInRange = WBackPosition.Position.CountEnemysInRange(600) > Player.CountEnemysInRange(600);
+            var moreEnemiesInRange = WBackPosition.Position.CountEnemiesInRange(600) > Player.CountEnemiesInRange(600);
             var isFleeing = Program.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None;
             var spellDown = Menu.Item("ComboW2Spells").GetValue<bool>() && !Q.IsReady() && !E.IsReady() && !R.IsReady();
             var cast = canCast && (isLowHP || spellDown) && !moreEnemiesInRange && !isFleeing;
@@ -252,8 +247,9 @@ namespace LeBlanc
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            CurrentTarget = Target;
-            if (!Enabled || !CurrentTarget.IsValidTarget(1500))
+            CurrentTarget = Utils.GetTarget(GetComboRange());
+
+            if (!Enabled)
             {
                 return;
             }
@@ -261,8 +257,10 @@ namespace LeBlanc
             if (CurrentTarget.IsValidTarget(GetComboRange()))
             {
                 ComboLogic();
+                return;
             }
 
+            CurrentTarget = Utils.GetTarget(W.Range * 2);
             if (Menu.Item("GapCloseEnabled").GetValue<bool>() && CurrentTarget.IsValidTarget(W.Range * 2))
             {
                 var canCast = CanCast("W") && W.IsReady(1) && R.IsReady();
