@@ -1,11 +1,7 @@
-﻿#region
-
-using System;
+﻿using System;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-
-#endregion
 
 namespace LeBlanc
 {
@@ -20,19 +16,16 @@ namespace LeBlanc
 
             var flee = new Menu(Name + " Settings", Name);
 
-            var fleeW = flee.AddSubMenu(new Menu("W", "W"));
-            fleeW.AddItem(new MenuItem("FleeW", "Use W").SetValue(true));
+            var fleeW = flee.AddMenu("W", "W");
+            fleeW.AddBool("FleeW", "Use W");
 
-            var fleeE = flee.AddSubMenu(new Menu("E", "E"));
-            fleeE.AddItem(new MenuItem("FleeE", "Use E").SetValue(true));
-            fleeE.AddItem(
-                new MenuItem("FleeEHC", "MinHitChance").SetValue(
-                    new StringList(
-                        new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
+            var fleeE = flee.AddMenu("E", "E");
+            fleeE.AddBool("FleeE", "Use E");
+            fleeE.AddHitChance("FleeEHC", "Min HitChance", HitChance.Medium);
 
-            var fleeR = flee.AddSubMenu(new Menu("R", "R"));
-            fleeR.AddItem(new MenuItem("FleeRW", "Use W Ult").SetValue(true));
-            flee.AddItem(new MenuItem("FleeKey", "Flee Key").SetValue(new KeyBind((byte) 'T', KeyBindType.Press)));
+            var fleeR = flee.AddMenu("R", "R");
+            fleeR.AddBool("FleeRW", "Use W Ult");
+            flee.AddKeyBind("FleeKey", "Flee Key", (byte) 'T');
 
             #endregion
 
@@ -71,6 +64,11 @@ namespace LeBlanc
             get { return Spells.R; }
         }
 
+        private static HitChance EHitChance
+        {
+            get { return Menu.Item("FleeEHC").GetHitChance(); }
+        }
+
         private static void Game_OnGameUpdate(EventArgs args)
         {
             if (!Enabled)
@@ -80,29 +78,31 @@ namespace LeBlanc
 
             Program.Orbwalker.ActiveMode = Orbwalking.OrbwalkingMode.None;
 
+            MoveTo();
+
             if (CastW())
             {
-                MoveTo();
                 return;
             }
 
             if (CastR())
             {
-                MoveTo();
                 return;
             }
 
-            if (CastE(Utils.GetHitChance("FleeEHC")))
+            if (CastE(EHitChance))
             {
                 MoveTo();
-                return;
             }
-
-            MoveTo();
         }
 
         private static void MoveTo()
         {
+            if (Player.IsDashing())
+            {
+                return;
+            }
+
             Utils.Troll();
             var d = Player.ServerPosition.Distance(Game.CursorPos);
             Player.IssueOrder(GameObjectOrder.MoveTo, Player.ServerPosition.Extend(Game.CursorPos, d + 250));
@@ -110,13 +110,14 @@ namespace LeBlanc
 
         private static bool CastW()
         {
-            return CanCast("W") && W.IsReady(1) && W.Cast(GetCastPosition());
+            return !Player.IsDashing() && CanCast("W") && W.IsReady(1) && W.Cast(GetCastPosition());
         }
 
         private static bool CastE(HitChance hc)
         {
             var target = Utils.GetTarget(E.Range);
-            if (!CanCast("E") || !E.IsReady() || !target.IsValidTarget(E.Range))
+            
+            if (Player.IsDashing() || !CanCast("E") || !E.IsReady() || !target.IsValidTarget(E.Range))
             {
                 return false;
             }
@@ -127,7 +128,7 @@ namespace LeBlanc
 
         private static bool CastR()
         {
-            var canCast = CanCast("RW") && R.IsReady(SpellSlot.W);
+            var canCast = !Player.IsDashing() && CanCast("RW") && R.IsReady(SpellSlot.W);
             return canCast && R.Cast(SpellSlot.W, GetCastPosition());
         }
 

@@ -1,11 +1,7 @@
-﻿#region
-
-using System;
+﻿using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
-
-#endregion
 
 namespace LeBlanc
 {
@@ -20,21 +16,18 @@ namespace LeBlanc
 
             var laneclear = new Menu("Farm Settings", "LaneClear");
 
-            var lcQ = laneclear.AddSubMenu(new Menu("Q", "Q"));
+            var lcQ = laneclear.AddMenu("Q", "Q");
+            lcQ.AddBool("LaneClearQ", "Use Q");
+            lcQ.AddSlider("LaneClearQMana", "Minimum Q Mana Percent", 30);
 
-            lcQ.AddItem(new MenuItem("LaneClearQ", "Use Q").SetValue(true));
-            lcQ.AddItem(new MenuItem("LaneClearQMana", "Minimum Q Mana Percent").SetValue(new Slider(30)));
 
+            var lcW = laneclear.AddMenu("W", "W");
+            lcW.AddBool("LaneClearW", "Use W");
+            lcW.AddBool("LaneClearRW", "Use RW");
+            lcW.AddSlider("LaneClearWHits", "Min Enemies Hit", 2, 0, 5);
+            lcW.AddSlider("LaneClearWMana", "Minimum W Mana Percent", 30);
 
-            var lcW = laneclear.AddSubMenu(new Menu("W", "W"));
-
-            lcW.AddItem(new MenuItem("LaneClearW", "Use W").SetValue(true));
-            lcW.AddItem(new MenuItem("LaneClearRW", "Use RW").SetValue(true));
-            lcW.AddItem(new MenuItem("LaneClearWHits", "Min Enemies Hit").SetValue(new Slider(2, 0, 5)));
-            lcW.AddItem(new MenuItem("LaneClearWMana", "Minimum W Mana Percent").SetValue(new Slider(30)));
-
-            laneclear.AddItem(
-                new MenuItem("LaneClearKey", "Farm Key").SetValue(new KeyBind((byte) 'V', KeyBindType.Press)));
+            laneclear.AddKeyBind("LaneClearKey", "Farm Key", (byte) 'V');
 
             #endregion
 

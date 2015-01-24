@@ -1,10 +1,6 @@
-﻿#region
-
-using System;
+﻿using System;
 using LeagueSharp;
 using LeagueSharp.Common;
-
-#endregion
 
 namespace LeBlanc
 {
@@ -12,31 +8,27 @@ namespace LeBlanc
     {
         private const string Name = "Harass";
         public static Menu LocalMenu;
-        private static Obj_AI_Hero _currentTarget;
+        private static Obj_AI_Hero CurrentTarget;
 
         static Harass()
         {
             #region Menu
 
             var harass = new Menu(Name + " Settings", Name);
-            var harassQ = harass.AddSubMenu(new Menu("Q", "Q"));
-            harassQ.AddItem(new MenuItem("HarassQ", "Use Q").SetValue(true));
-            harassQ.AddItem(new MenuItem("HarassQMana", "Min Mana %").SetValue(new Slider(40)));
+            var harassQ = harass.AddMenu("Q", "Q");
+            harassQ.AddBool("HarassQ", "Use Q");
+            harassQ.AddSlider("HarassQMana", "Min Mana %", 40);
 
-            var harassW = harass.AddSubMenu(new Menu("W", "W"));
-            harassW.AddItem(new MenuItem("HarassW", "Use W").SetValue(true));
-            harassW.AddItem(new MenuItem("HarassW2", "Use Second W").SetValue(true));
-            harassW.AddItem(
-                new MenuItem("HarassW2Mode", "Second W Setting").SetValue(new StringList(new[] { "Auto", "After E" })));
-            harassW.AddItem(new MenuItem("HarassWMana", "Min Mana %").SetValue(new Slider(40)));
+            var harassW = harass.AddMenu("W", "W");
+            harassW.AddBool("HarassW", "Use W");
+            harassW.AddBool("HarassW2", "Use Second W");
+            harassW.AddList("HarassW2Mode", "Second W Setting", new[] { "Auto", "After E" });
+            harassW.AddSlider("HarassWMana", "Min Mana %", 40);
 
-            var harassE = harass.AddSubMenu(new Menu("E", "E"));
-            harassE.AddItem(new MenuItem("HarassE", "Use E").SetValue(true));
-            harassE.AddItem(
-                new MenuItem("HarassEHC", "MinHitChance").SetValue(
-                    new StringList(
-                        new[] { HitChance.Low.ToString(), HitChance.Medium.ToString(), HitChance.High.ToString() }, 1)));
-            harassE.AddItem(new MenuItem("HarassEMana", "Min Mana %").SetValue(new Slider(40)));
+            var harassE = harass.AddMenu("E", "E");
+            harassE.AddBool("HarassE", "Use E");
+            harassE.AddHitChance("HarassEHC", "Min HitChance", HitChance.Medium);
+            harassE.AddSlider("HarassEMana", "Min Mana %", 40);
 
             //  harass.AddItem(new MenuItem("HarassCombo", "W->Q->E->W Combo").SetValue(true));
 
@@ -44,7 +36,7 @@ namespace LeBlanc
             harassR.AddItem(new MenuItem("HarassR", "Use R").SetValue(true));
             */
 
-            harass.AddItem(new MenuItem("HarassKey", "Harass Key").SetValue(new KeyBind((byte) 'C', KeyBindType.Press)));
+            harass.AddKeyBind("HarassKey", "Harass Key", (byte) 'C');
 
             #endregion
 
@@ -83,18 +75,16 @@ namespace LeBlanc
             get { return Spells.E; }
         }
 
-/*
         private static Spell R
         {
             get { return Spells.R; }
         }
-*/
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            _currentTarget = Utils.GetTarget(E.Range);
+            CurrentTarget = Utils.GetTarget(E.Range);
 
-            if (!Enabled || !_currentTarget.IsValidTarget(Q.Range))
+            if (!Enabled || !CurrentTarget.IsValidTarget(Q.Range))
             {
                 return;
             }
@@ -124,14 +114,14 @@ namespace LeBlanc
 
         private static bool CastQ()
         {
-            return CanCast("Q") && Q.IsReady() && Q.CanCast(_currentTarget) && Q.Cast(_currentTarget).IsCasted();
+            return CanCast("Q") && Q.IsReady() && Q.CanCast(CurrentTarget) && Q.Cast(CurrentTarget).IsCasted();
         }
 
         private static bool CastW()
         {
             var canCast = CanCast("W") && W.IsReady(1);
-            var qwRange = _currentTarget.IsValidTarget(Q.Range + W.Range);
-            var wRange = _currentTarget.IsValidTarget(W.Range);
+            var qwRange = CurrentTarget.IsValidTarget(Q.Range + W.Range);
+            var wRange = CurrentTarget.IsValidTarget(W.Range);
 
             if (!canCast)
             {
@@ -140,12 +130,12 @@ namespace LeBlanc
 
             if (wRange)
             {
-                return W.Cast(_currentTarget).IsCasted();
+                return W.Cast(CurrentTarget).IsCasted();
             }
 
             if (qwRange)
             {
-                return W.Cast(Player.ServerPosition.Extend(_currentTarget.ServerPosition, W.Range));
+                return W.Cast(Player.ServerPosition.Extend(CurrentTarget.ServerPosition, W.Range));
             }
 
             return false;
@@ -162,19 +152,18 @@ namespace LeBlanc
 
             var mode = Menu.Item("HarassW2Mode").GetValue<StringList>().SelectedIndex;
 
-            return mode == 1 ? W.Cast() : _currentTarget.HasEBuff() && W.Cast();
+            return mode == 0 ? W.Cast() : CurrentTarget.HasEBuff() && W.Cast();
         }
 
         private static bool CastE(HitChance hc = HitChance.Low)
         {
-            if (!CanCast("E") || !E.IsReady() || !E.CanCast(_currentTarget) || Player.IsDashing())
+            if (!CanCast("E") || !E.IsReady() || !E.CanCast(CurrentTarget) || Player.IsDashing())
             {
                 return false;
             }
 
-            var chance = hc == HitChance.Low ? Utils.GetHitChance("HarassEHC") : hc;
-            var pred = E.GetPrediction(_currentTarget);
-
+            var chance = hc == HitChance.Low ? Menu.Item("HarassEHC").GetHitChance() : hc;
+            var pred = E.GetPrediction(CurrentTarget);
             return pred.Hitchance >= chance && E.Cast(pred.CastPosition);
         }
 
@@ -182,7 +171,6 @@ namespace LeBlanc
         {
             var cast = Menu.Item(Name + spell).GetValue<bool>();
             var lowMana = Player.ManaPercentage() < Menu.Item(Name + spell + "Mana").GetValue<Slider>().Value;
-
             return cast && !lowMana;
         }
     }

@@ -1,14 +1,10 @@
-﻿#region
-
-using System;
+﻿using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using LeBlanc.Properties;
 using SharpDX;
 using Color = System.Drawing.Color;
-
-#endregion
 
 namespace LeBlanc
 {
@@ -57,12 +53,9 @@ namespace LeBlanc
 
             Menu = new Menu("LeBlanc The Schemer", "LeBlanc", true);
 
-            Menu.AddSubMenu(new Menu("Orbwalker", "Orbwalker"));
-            Orbwalker = new Orbwalking.Orbwalker(Menu.SubMenu("Orbwalker"));
+            Orbwalker = Menu.AddOrbwalker();
+            Menu.AddTargetSelector();
 
-            var ts = new Menu("Target Selector", "Target Selector");
-            TargetSelector.AddToMenu(ts);
-            Menu.AddSubMenu(ts);
 
             var combo = new Combo();
             Menu.AddSubMenu(Combo.LocalMenu);
@@ -79,24 +72,24 @@ namespace LeBlanc
             var clone = new Clone();
             Menu.AddSubMenu(Clone.LocalMenu);
 
-            var draw = Menu.AddSubMenu(new Menu("Draw Settings", "Draw"));
+            var draw = Menu.AddMenu("Draw Settings", "Draw");
             draw.AddItem(new MenuItem("Draw0", "Draw Q Range").SetValue(new Circle(true, Color.Red, Q.Range)));
             draw.AddItem(new MenuItem("Draw1", "Draw W Range").SetValue(new Circle(false, Color.Red, W.Range)));
             draw.AddItem(new MenuItem("Draw2", "Draw E Range").SetValue(new Circle(true, Color.Purple, E.Range)));
-            draw.AddItem(new MenuItem("DrawCD", "Draw on CD").SetValue(true));
+            draw.AddBool("DrawCD", "Draw on CD");
             draw.AddItem(
                 new MenuItem("DrawWCombo", "Draw GapCloser Combo").SetValue(new Circle(true, Color.Orange, W.Range * 2)));
-            draw.AddItem(new MenuItem("DamageIndicator", "Damage Indicator").SetValue(true));
+            draw.AddBool("DamageIndicator", "Damage Indicator");
 
-            var misc = Menu.AddSubMenu(new Menu("Misc Settings", "Misc"));
+            var misc = Menu.AddMenu("Misc Settings", "Misc");
 
             var ks = new KillSteal();
             misc.AddSubMenu(KillSteal.LocalMenu);
 
-            misc.AddItem(new MenuItem("Interrupt", "Interrupt Spells").SetValue(true));
-            misc.AddItem(new MenuItem("AntiGapcloser", "AntiGapCloser").SetValue(true));
-            misc.AddItem(new MenuItem("Sounds", "Sounds").SetValue(true));
-            misc.AddItem(new MenuItem("Troll", "Troll").SetValue(true));
+            misc.AddBool("Interrupt", "Interrupt Spells");
+            misc.AddBool("AntiGapcloser", "AntiGapCloser");
+            misc.AddBool("Sounds", "Sounds");
+            misc.AddBool("Troll", "Troll");
 
             Menu.AddToMainMenu();
 
@@ -179,7 +172,7 @@ namespace LeBlanc
             }
 
             var wCircle = Menu.Item("DrawWCombo").GetValue<Circle>();
-            var dfgReady = (Items.Dfg.HasItem() && Items.Dfg.IsReady()) || (Items.Bft.HasItem() && Items.Bft.IsReady());
+            var dfgReady = (Items.DFG.HasItem() && Items.DFG.IsReady()) || (Items.BFT.HasItem() && Items.BFT.IsReady());
             var canDraw = wCircle.Active && W.IsReady(1) && R.IsReady() && dfgReady;
 
             if (canDraw)
@@ -199,10 +192,7 @@ namespace LeBlanc
                             Player.Position, circle.Radius, spell.IsReady() ? circle.Color : Color.Red);
                     }
                 }
-                catch
-                {
-                    // ignored
-                }
+                catch {}
             }
         }
 
@@ -267,27 +257,27 @@ namespace LeBlanc
                 damage += Player.GetSpellDamage(enemy, SpellSlot.W);
             }
 
-            if (Items.Dfg.IsReady())
+            if (Items.DFG.IsReady())
             {
                 damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
-            if (Items.Bft.IsReady())
+            if (Items.BFT.IsReady())
             {
                 damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.BlackFireTorch);
             }
 
-            if (Items.Fqc.IsReady())
+            if (Items.FQC.IsReady())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.FrostQueenClaim);
             }
 
-            if (Items.Botrk.IsReady())
+            if (Items.BOTRK.IsReady())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.Botrk);
             }
 
-            if (Items.Lt.HasItem())
+            if (Items.LT.HasItem())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.LiandrysTorment);
             }

@@ -52,13 +52,6 @@ namespace LeBlanc
             return ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == (ItemId) item.Id);
         }
 
-        public static void RandomizeCast(this Spell spell, Vector3 position)
-        {
-            var rnd = new Random(Environment.TickCount);
-            var randomVector = new Vector2(rnd.Next(75), rnd.Next(75)).To3D();
-            spell.Cast(position + randomVector);
-        }
-
         public static SpellSlot GetSpellSlot(this Spell spell)
         {
             if (!spell.IsReady() || spell.Instance.Name == null)
@@ -166,29 +159,15 @@ namespace LeBlanc
             return spell.IsReady() && spell.GetToggleState() == stage;
         }
 
-        public static HitChance GetHitChance(string name)
+        public static HitChance GetHitChance(this MenuItem item)
         {
-            var hc = Program.Menu.Item(name).GetValue<StringList>();
-            switch (hc.SList[hc.SelectedIndex])
-            {
-                case "Low":
-                    return HitChance.Low;
-                case "Medium":
-                    return HitChance.Medium;
-                case "High":
-                    return HitChance.High;
-            }
-            return HitChance.Medium;
-        }
-
-        public static bool IsValidPet(this Obj_AI_Base pet)
-        {
-            return pet.IsValid && !pet.IsDead && pet.Health > 0 && pet.CanMove;
+            return (HitChance)item.GetValue<StringList>().SelectedIndex + 3;
         }
 
         public static Obj_AI_Hero GetTarget(float range)
         {
-            return TargetSelector.GetTarget(range, TargetSelector.DamageType.Magical);
+            var target = TargetSelector.GetTarget(range, TargetSelector.DamageType.Magical);
+            return target.IsValidTarget(range) && !TargetSelector.IsInvulnerable(target, TargetSelector.DamageType.Magical, false) ? target : new Obj_AI_Hero();
         }
 
         public static void Troll()
@@ -200,6 +179,71 @@ namespace LeBlanc
 
             LastTroll = Environment.TickCount;
             Game.Say("/l");
+        }
+
+        public static void AddList(this Menu menu, string name, string displayName, string[] list, int selectedIndex = 0)
+        {
+            menu.AddItem(new MenuItem(name, displayName).SetValue(new StringList(list, selectedIndex)));
+        }
+
+        public static void AddBool(this Menu menu, string name, string displayName, bool value = true)
+        {
+            menu.AddItem(new MenuItem(name, displayName).SetValue(value));
+        }
+
+        public static void AddHitChance(this Menu menu, string name, string displayName, HitChance defaultHitChance)
+        {
+            menu.AddItem(
+                new MenuItem(name, displayName).SetValue(
+                    new StringList((new[] { "Low", "Medium", "High", "Very High" }), (int) defaultHitChance - 3)));
+        }
+
+        public static void AddSlider(this Menu menu,
+            string name,
+            string displayName,
+            int value,
+            int min = 0,
+            int max = 100)
+        {
+            menu.AddItem(new MenuItem(name, displayName).SetValue(new Slider(value, min, max)));
+        }
+
+        public static Orbwalking.Orbwalker AddOrbwalker(this Menu menu)
+        {
+            var orbwalk = menu.AddSubMenu(new Menu("Orbwalker", "Orbwalker"));
+            return new Orbwalking.Orbwalker(orbwalk);
+        }
+
+        public static void AddTargetSelector(this Menu menu)
+        {
+            var ts = new Menu("Target Selector", "Target Selector");
+            TargetSelector.AddToMenu(ts);
+            menu.AddSubMenu(ts);
+        }
+
+        public static void AddObject(this Menu menu, string name, string displayName, object value = null)
+        {
+            var i = menu.AddItem(new MenuItem(name, displayName));
+
+            if (value != null)
+            {
+                i.SetValue(value);
+            }
+        }
+
+        public static Menu AddMenu(this Menu menu, string name, string displayName)
+        {
+            return menu.AddSubMenu(new Menu(displayName, name));
+        }
+
+        public static void AddKeyBind(this Menu menu,
+            string name,
+            string displayName,
+            uint key,
+            KeyBindType type = KeyBindType.Press,
+            bool defaultValue = false)
+        {
+            menu.AddItem(new MenuItem(name, displayName).SetValue(new KeyBind(key, type, defaultValue)));
         }
     }
 
