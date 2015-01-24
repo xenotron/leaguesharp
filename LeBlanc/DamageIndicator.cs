@@ -1,9 +1,13 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
+
+#endregion
 
 namespace LeBlanc
 {
@@ -18,16 +22,15 @@ namespace LeBlanc
         public static Color Color = Color.Lime;
         public static Color FillColor = Color.Goldenrod;
         public static bool Fill = true;
+        private static DamageToUnitDelegate _damageToUnit;
+
+        private static readonly Render.Text Text = new Render.Text(
+            0, 0, string.Empty, 11, new ColorBGRA(255, 0, 0, 255), "monospace");
 
         public static bool Enabled
         {
             get { return Program.Menu.Item("DamageIndicator").GetValue<bool>(); }
         }
-
-        private static DamageToUnitDelegate _damageToUnit;
-
-        private static readonly Render.Text Text = new Render.Text(
-            0, 0, "", 11, new ColorBGRA(255, 0, 0, 255), "monospace");
 
         public static DamageToUnitDelegate DamageToUnit
         {
@@ -62,23 +65,25 @@ namespace LeBlanc
 
                 if (damage > unit.Health)
                 {
-                    Text.X = (int)barPos.X + XOffset;
-                    Text.Y = (int)barPos.Y + YOffset - 13;
-                    Text.text = ((int)(unit.Health - damage)).ToString();
+                    Text.X = (int) barPos.X + XOffset;
+                    Text.Y = (int) barPos.Y + YOffset - 13;
+                    Text.text = ((int) (unit.Health - damage)).ToString();
                     Text.OnEndScene();
                 }
 
                 Drawing.DrawLine(xPosDamage, yPos, xPosDamage, yPos + Height / 2, 2, Color);
 
-                if (Fill)
+                if (!Fill)
                 {
-                    var differenceInHP = xPosCurrentHp - xPosDamage;
-                    var pos1 = barPos.X + 9 + (107 * percentHealthAfterDamage);
+                    continue;
+                }
 
-                    for (var i = 0; i < differenceInHP; i++)
-                    {
-                        Drawing.DrawLine(pos1 + i, yPos, pos1 + i, yPos + Height / 2, 1, FillColor);
-                    }
+                var differenceInHp = xPosCurrentHp - xPosDamage;
+                var pos1 = barPos.X + 9 + (107 * percentHealthAfterDamage);
+
+                for (var i = 0; i < differenceInHp; i++)
+                {
+                    Drawing.DrawLine(pos1 + i, yPos, pos1 + i, yPos + Height / 2, 1, FillColor);
                 }
             }
         }

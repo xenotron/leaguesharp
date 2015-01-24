@@ -78,8 +78,7 @@ namespace TUrgot
             Menu.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Menu.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearQ", "Use Q").SetValue(true));
             Menu.SubMenu("LaneClear")
-                .AddItem(
-                    new MenuItem("LaneClearQManaPercent", "Minimum Q Mana Percent").SetValue(new Slider(30, 0, 100)));
+                .AddItem(new MenuItem("LaneClearQManaPercent", "Minimum Q Mana Percent").SetValue(new Slider(30)));
             Menu.SubMenu("LaneClear")
                 .AddItem(
                     new MenuItem("LaneClearActive", "LaneClear").SetValue(new KeyBind((byte) 'V', KeyBindType.Press)));
@@ -137,9 +136,9 @@ namespace TUrgot
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            Circle[] Draw = { Menu.Item("QRange").GetValue<Circle>(), Menu.Item("ERange").GetValue<Circle>() };
+            Circle[] draw = { Menu.Item("QRange").GetValue<Circle>(), Menu.Item("ERange").GetValue<Circle>() };
 
-            foreach (var circle in Draw.Where(circle => circle.Active))
+            foreach (var circle in draw.Where(circle => circle.Active))
             {
                 Utility.DrawCircle(Player.Position, circle.Radius, circle.Color);
             }
@@ -200,8 +199,7 @@ namespace TUrgot
 
         private static void CastQ(Obj_AI_Base target, string mode)
         {
-            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() &&
-                target.IsValidTarget(Q.Range))
+            if (Q.IsReady() && Menu.Item(mode + "Q").GetValue<bool>() && target.IsValidTarget(Q.Range))
             {
                 Q.Cast(target);
             }

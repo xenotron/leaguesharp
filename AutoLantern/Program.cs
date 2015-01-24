@@ -32,7 +32,7 @@ namespace AutoLantern
             _menu = new Menu("AutoLantern", "AutoLantern", true);
             _menu.AddItem(new MenuItem("Auto", "Auto-Lantern at Low HP").SetValue(true));
             _menu.AddItem(new MenuItem("Low", "Low HP Percent").SetValue(new Slider(20, 30, 5)));
-            _menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(32, KeyBindType.Press, false)));
+            _menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(32, KeyBindType.Press)));
             _menu.AddToMainMenu();
 
             Game.OnGameUpdate += OnGameUpdate;
@@ -85,7 +85,11 @@ namespace AutoLantern
 
         private static void InteractObject(GameObject obj)
         {
-            var p = new PKT_InteractReq { NetworkId = _player.NetworkId, TargetNetworkId = obj.NetworkId };
+            var p = new PKT_InteractReq
+            {
+                NetworkId = _player.NetworkId,
+                TargetNetworkId = obj.NetworkId
+            };
             Game.SendPacket(p.Encode(), PacketChannel.C2S, PacketProtocolFlags.Reliable);
         }
     }

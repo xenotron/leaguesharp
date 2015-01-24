@@ -1,14 +1,19 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Media;
+using Azir.Properties;
 using LeagueSharp;
 using LeagueSharp.Common;
 using LeagueSharp.Network.Packets;
 using SharpDX;
 using Color = System.Drawing.Color;
 using Packet = LeagueSharp.Network.Packets.Packet;
+
+#endregion
 
 namespace Azir
 {
@@ -123,7 +128,7 @@ namespace Azir
 
             if (Menu.Item("Sounds").GetValue<bool>())
             {
-                var sound = new SoundObject(Properties.Resources.OnLoad);
+                var sound = new SoundObject(Resources.OnLoad);
                 sound.Play();
             }
 
@@ -137,44 +142,6 @@ namespace Azir
             //Game.OnGameSendPacket += Game_OnGameSendPacket;
             // Drawing.OnDraw += Drawing_OnDraw;
         }
-
-        private static void Game_OnGameSendPacket(GamePacketEventArgs args)
-        {
-            if (args.GetPacketId().Equals(Packet.GetPacketId<PKT_InteractReq>()))
-            {
-                var dp = new PKT_InteractReq();
-                dp.Decode(args);
-                var unit = ObjectManager.GetUnitByNetworkId<GameObject>(dp.TargetNetworkId);
-                Console.WriteLine(unit.Name);
-                Console.Write(unit.Type);
-            }
-        }
-
-        #region Drawing
-
-        private static void Drawing_OnDraw(EventArgs args)
-        {
-            if (Q.IsReady() && (Player.Spellbook.SelectedSpellSlot == SpellSlot.Q))
-            {
-                var targetPos = Game.CursorPos;
-
-                foreach (var soldier in AzirSoldier.Where(h => h.IsValid && !h.IsDead))
-                {
-                    var d = Player.Distance(soldier);
-                    d = d > Q.Range ? soldier.Distance(targetPos) : Q.Range;
-
-                    var pos1 = Drawing.WorldToScreen(soldier.ServerPosition);
-                    var vector = soldier.ServerPosition.Extend(targetPos, d);
-                    var pos2 = Drawing.WorldToScreen(vector);
-
-                    Drawing.DrawCircle(soldier.Position, 200, Color.Green);
-                    Drawing.DrawCircle(vector, 200, Color.Blue);
-                    Drawing.DrawLine(pos1, pos2, 3, Color.Red);
-                }
-            }
-        }
-
-        #endregion
 
         #region Harass
 
@@ -326,31 +293,79 @@ namespace Azir
 
             Orbwalker.ActiveMode = Orbwalking.OrbwalkingMode.None;
 
-            if (E.IsReady() && Menu.Item("FleeE").GetValue<bool>())
+            if (!E.IsReady() || !Menu.Item("FleeE").GetValue<bool>())
             {
-                var eTarget = GetETargets(Game.CursorPos).FirstOrDefault();
+                return;
+            }
 
-                if (eTarget == null || !eTarget.IsValid)
+            var eTarget = GetETargets(Game.CursorPos).FirstOrDefault();
+
+            if (eTarget == null || !eTarget.IsValid)
+            {
+                if (W.IsReady() && Menu.Item("FleeW").GetValue<bool>())
                 {
-                    if (W.IsReady() && Menu.Item("FleeW").GetValue<bool>())
-                    {
-                        W.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range));
-                    }
-                    Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
-                    return;
+                    W.Cast(Player.ServerPosition.Extend(Game.CursorPos, W.Range));
                 }
+                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                return;
+            }
 
-                if (Q.IsReady() && Menu.Item("FleeQ").GetValue<bool>())
-                {
-                    Q.Cast(Game.CursorPos);
-                    return;
-                }
+            if (Q.IsReady() && Menu.Item("FleeQ").GetValue<bool>())
+            {
+                Q.Cast(Game.CursorPos);
+                return;
+            }
 
-                E.Cast(eTarget.ServerPosition);
-                var d = Player.ServerPosition.Distance(Game.CursorPos);
-                Player.IssueOrder(GameObjectOrder.MoveTo, Player.ServerPosition.Extend(Game.CursorPos, d + 250));
+            E.Cast(eTarget.ServerPosition);
+            var d = Player.ServerPosition.Distance(Game.CursorPos);
+            Player.IssueOrder(GameObjectOrder.MoveTo, Player.ServerPosition.Extend(Game.CursorPos, d + 250));
+        }
+
+        #endregion
+
+/*
+        private static void Game_OnGameSendPacket(GamePacketEventArgs args)
+        {
+            if (!args.GetPacketId().Equals(Packet.GetPacketId<PKT_InteractReq>()))
+            {
+                return;
+            }
+
+            var dp = new PKT_InteractReq();
+            dp.Decode(args);
+            var unit = ObjectManager.GetUnitByNetworkId<GameObject>(dp.TargetNetworkId);
+            Console.WriteLine(unit.Name);
+            Console.Write(unit.Type);
+        }
+*/
+
+        #region Drawing
+
+/*
+        private static void Drawing_OnDraw(EventArgs args)
+        {
+            if (!Q.IsReady() || (Player.Spellbook.SelectedSpellSlot != SpellSlot.Q))
+            {
+                return;
+            }
+
+            var targetPos = Game.CursorPos;
+
+            foreach (var soldier in AzirSoldier.Where(h => h.IsValid && !h.IsDead))
+            {
+                var d = Player.Distance(soldier);
+                d = d > Q.Range ? soldier.Distance(targetPos) : Q.Range;
+
+                var pos1 = Drawing.WorldToScreen(soldier.ServerPosition);
+                var vector = soldier.ServerPosition.Extend(targetPos, d);
+                var pos2 = Drawing.WorldToScreen(vector);
+
+                Drawing.DrawCircle(soldier.Position, 200, Color.Green);
+                Drawing.DrawCircle(vector, 200, Color.Blue);
+                Drawing.DrawLine(pos1, pos2, 3, Color.Red);
             }
         }
+*/
 
         #endregion
 
@@ -362,6 +377,7 @@ namespace Azir
             {
                 return;
             }
+
             foreach (var soldier in AzirSoldier.Where(soldier => soldier.NetworkId == sender.NetworkId))
             {
                 AzirSoldier.Remove(soldier);
@@ -440,25 +456,27 @@ namespace Azir
 
         public static void UsePassive()
         {
-            if (Menu.Item("UsePassive").GetValue<bool>())
+            if (!Menu.Item("UsePassive").GetValue<bool>())
             {
-                var turret =
-                    ObjectManager.Get<Obj_AI_Minion>()
-                        .Where(
-                            h =>
-                                h.IsValid && h.Name == "TowerClicker" && h.Health < 1 &&
-                                Player.Distance(h.ServerPosition) < 800)
-                        .OrderByDescending(h => Player.Distance(h.ServerPosition))
-                        .FirstOrDefault();
-
-                if (turret == null || !turret.IsValid)
-                {
-                    return;
-                }
-
-                var p = new PKT_InteractReq { NetworkId = Player.NetworkId, TargetNetworkId = turret.NetworkId };
-                p.Encode().SendAsPacket();
+                return;
             }
+
+            var turret =
+                ObjectManager.Get<Obj_AI_Minion>()
+                    .Where(
+                        h =>
+                            h.IsValid && h.Name == "TowerClicker" && h.Health < 1 &&
+                            Player.Distance(h.ServerPosition) < 800)
+                    .OrderByDescending(h => Player.Distance(h.ServerPosition))
+                    .FirstOrDefault();
+
+            if (turret == null || !turret.IsValid)
+            {
+                return;
+            }
+
+            var p = new PKT_InteractReq { NetworkId = Player.NetworkId, TargetNetworkId = turret.NetworkId };
+            p.Encode().SendAsPacket();
         }
 
         #endregion

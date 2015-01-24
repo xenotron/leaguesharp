@@ -16,7 +16,6 @@ namespace WaypointTracker
     {
         public static Dictionary<Obj_AI_Hero, Render.Circle> Circles = new Dictionary<Obj_AI_Hero, Render.Circle>();
         public static Dictionary<Obj_AI_Hero, Render.Text> Text = new Dictionary<Obj_AI_Hero, Render.Text>();
-
         public static Menu Menu;
 
         private static void Main(string[] args)

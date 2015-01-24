@@ -25,10 +25,12 @@ namespace QuickTeleport
             _player = ObjectManager.Player;
             _teleport = _player.Spellbook.GetSpell(_player.GetSpellSlot("SummonerTeleport"));
             if (_teleport == null || _teleport.Slot == SpellSlot.Unknown)
+            {
                 return;
+            }
 
             _menu = new Menu("QuickTeleport", "QuickTeleport", true);
-            _menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(16, KeyBindType.Press, false)));
+            _menu.AddItem(new MenuItem("Hotkey", "Hotkey").SetValue(new KeyBind(16, KeyBindType.Press)));
             _menu.AddItem(new MenuItem("Turret", "QT to Turrets Only").SetValue(true));
             _menu.AddToMainMenu();
             Game.OnGameUpdate += Game_OnGameUpdate;
@@ -38,27 +40,29 @@ namespace QuickTeleport
         private static void Game_OnGameUpdate(EventArgs args)
         {
             if (!CanTeleport() || !_menu.Item("Hotkey").GetValue<KeyBind>().Active)
+            {
                 return;
+            }
 
             Obj_AI_Base closestObject = _player;
             float d = 2000;
 
-            foreach (
-                var obj in
-                    ObjectManager.Get<Obj_AI_Base>()
-                        .Where(
-                            obj =>
-                                obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == _player.Team &&
-                                obj.Type != _player.Type &&
-                                (obj is Obj_AI_Turret || !_menu.Item("Turret").GetValue<bool>()) &&
-                                obj.ServerPosition.Distance(Game.CursorPos) < d))
+            foreach (var obj in
+                ObjectManager.Get<Obj_AI_Base>()
+                    .Where(
+                        obj =>
+                            obj != null && obj.IsValid && obj.IsVisible && !obj.IsDead && obj.Team == _player.Team &&
+                            obj.Type != _player.Type && (obj is Obj_AI_Turret || !_menu.Item("Turret").GetValue<bool>()) &&
+                            obj.ServerPosition.Distance(Game.CursorPos) < d))
             {
                 closestObject = obj;
                 d = obj.ServerPosition.Distance(Game.CursorPos);
             }
 
             if (closestObject != _player && closestObject != null)
+            {
                 CastTeleport(closestObject);
+            }
         }
 
         private static bool CanTeleport()
@@ -70,7 +74,9 @@ namespace QuickTeleport
         private static void CastTeleport(Obj_AI_Base unit)
         {
             if (CanTeleport())
-                _player.SummonerSpellbook.CastSpell(_teleport.Slot, unit);
+            {
+                _player.Spellbook.CastSpell(_teleport.Slot, unit);
+            }
         }
     }
 }

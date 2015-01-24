@@ -11,7 +11,7 @@ namespace OathswornCaster
 {
     internal class Program
     {
-        public static int State = 0;
+        public static int State;
         public static Spell Oathsworn;
         public static Menu Menu;
 
@@ -33,13 +33,13 @@ namespace OathswornCaster
             Menu = new Menu("OathswornCaster", "OathswornCaster", true);
             Menu.AddItem(new MenuItem("Enabled", "Enabled").SetValue(new KeyBind(32, KeyBindType.Press)));
             Menu.AddItem(new MenuItem("Health", "Min Health %").SetValue(new Slider(30)));
-           // Menu.AddItem(new MenuItem("BlockCamera", "Block Camera Packet").SetValue(true));
+            // Menu.AddItem(new MenuItem("BlockCamera", "Block Camera Packet").SetValue(true));
             Menu.AddToMainMenu();
 
             Game.PrintChat(
                 "<b><font color =\"#FFFFFF\">Oathsworn Caster by </font><font color=\"#5C00A3\">Trees</font><font color =\"#FFFFFF\"> loaded!</font></b>");
 
-         //   Game.OnGameProcessPacket += Game_OnGameProcessPacket;
+            //   Game.OnGameProcessPacket += Game_OnGameProcessPacket;
             Game.OnGameUpdate += Game_OnGameUpdate;
         }
 

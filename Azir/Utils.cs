@@ -1,5 +1,9 @@
-﻿using LeagueSharp;
+﻿#region
+
+using LeagueSharp;
 using LeagueSharp.Common;
+
+#endregion
 
 namespace Azir
 {

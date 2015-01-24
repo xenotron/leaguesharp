@@ -23,20 +23,20 @@ namespace AttackDrawer
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            foreach (Obj_AI_Hero hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValid && hero.IsEnemy))
+            foreach (var hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValid && hero.IsEnemy))
             {
                 var circle = new Render.Circle(hero, Orbwalking.GetRealAutoAttackRange(hero), Color.Red, 4, true);
                 circle.Add();
                 CircleDictionary.Add(hero, circle);
             }
 
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_DomainUnload;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomainDomainUnload;
             Game.OnGameUpdate += Game_OnGameUpdate;
             Game.PrintChat("Attack Range Loaded!");
         }
 
-        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        private static void CurrentDomainDomainUnload(object sender, EventArgs e)
         {
             foreach (var circle in CircleDictionary)
             {
@@ -48,12 +48,12 @@ namespace AttackDrawer
         {
             foreach (var entry in CircleDictionary)
             {
-                Obj_AI_Hero hero = entry.Key;
-                Render.Circle circle = entry.Value;
-                float AARange = Orbwalking.GetRealAutoAttackRange(hero);
+                var hero = entry.Key;
+                var circle = entry.Value;
+                var aaRange = Orbwalking.GetRealAutoAttackRange(hero);
 
-                circle.Radius = AARange;
-                circle.Color = ObjectManager.Player.Distance(hero) < AARange ? Color.Red : Color.LimeGreen;
+                circle.Radius = aaRange;
+                circle.Color = ObjectManager.Player.Distance(hero) < aaRange ? Color.Red : Color.LimeGreen;
             }
         }
     }
