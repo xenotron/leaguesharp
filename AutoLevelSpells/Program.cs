@@ -21,16 +21,16 @@ namespace AutoLevelSpells
         {
             Menu = new Menu("AutoLevelSpells", "AutoLevelSpells", true);
             Menu.AddItem(new MenuItem("Enabled", "Enabled").SetValue(true));
-            Menu.Item("Enabled").ValueChanged += Enabled_ValueChanged;
+            Menu.Item("Enabled").ValueChanged += EnabledValueChanged;
             Menu.AddToMainMenu();
 
             if (Menu.Item("Enabled").GetValue<bool>())
             {
-                var level = new AutoLevel(GetSequence());
+                new AutoLevel(GetSequence());
             }
         }
 
-        private static void Enabled_ValueChanged(object sender, OnValueChangeEventArgs e)
+        private static void EnabledValueChanged(object sender, OnValueChangeEventArgs e)
         {
             AutoLevel.Enabled(e.GetNewValue<bool>());
         }
@@ -267,7 +267,7 @@ namespace AutoLevelSpells
                     break;
                 case "RekSai":
                     sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
-                    break;    
+                    break;
                 case "Renekton":
                     sequence = new[] { 2, 1, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
@@ -407,6 +407,7 @@ namespace AutoLevelSpells
                     sequence = new[] { 3, 2, 1, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     break;
             }
+
             return sequence;
         }
     }

@@ -5,6 +5,7 @@ using System.Media;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using ItemData = LeagueSharp.Common.Data.ItemData;
 
 namespace LeBlanc
 {

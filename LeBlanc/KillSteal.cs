@@ -1,7 +1,11 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+
+#endregion
 
 namespace LeBlanc
 {
@@ -78,42 +82,44 @@ namespace LeBlanc
                 return;
             }
 
-            if (CanCast("Spells"))
+            if (!CanCast("Spells"))
             {
-                if (CastQ())
-                {
-                    return;
-                }
-
-                switch (R.GetSpellSlot())
-                {
-                    case SpellSlot.Q:
-                        if (CastQ(true))
-                        {
-                            return;
-                        }
-                        break;
-                    case SpellSlot.W:
-                        if (CastW(true))
-                        {
-                            return;
-                        }
-                        break;
-                    case SpellSlot.E:
-                        if (CastE(true))
-                        {
-                            return;
-                        }
-                        break;
-                }
-
-                if (CastW())
-                {
-                    return;
-                }
-
-                if (CastE()) {}
+                return;
             }
+
+            if (CastQ())
+            {
+                return;
+            }
+
+            switch (R.GetSpellSlot())
+            {
+                case SpellSlot.Q:
+                    if (CastQ(true))
+                    {
+                        return;
+                    }
+                    break;
+                case SpellSlot.W:
+                    if (CastW(true))
+                    {
+                        return;
+                    }
+                    break;
+                case SpellSlot.E:
+                    if (CastE(true))
+                    {
+                        return;
+                    }
+                    break;
+            }
+
+            if (CastW())
+            {
+                return;
+            }
+
+            if (CastE()) {}
         }
 
         private static bool CastQ(bool ult = false)
@@ -122,9 +128,12 @@ namespace LeBlanc
             var unit =
                 ObjectManager.Get<Obj_AI_Hero>()
                     .FirstOrDefault(
-                        obj => obj.IsValidTarget(Q.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.Q));
+                        obj =>
+                            obj.IsValidTarget(Q.Range) && !obj.IsInvulnerable &&
+                            obj.Health < Player.GetSpellDamage(obj, SpellSlot.Q));
 
-            return canCast && unit.IsValidTarget(Q.Range) && (ult ? R.Cast(SpellSlot.Q, unit).IsCasted() : Q.Cast(unit).IsCasted());
+            return canCast && unit.IsValidTarget(Q.Range) &&
+                   (ult ? R.Cast(SpellSlot.Q, unit).IsCasted() : Q.Cast(unit).IsCasted());
         }
 
         private static bool CastW(bool ult = false)
@@ -133,9 +142,12 @@ namespace LeBlanc
             var unit =
                 ObjectManager.Get<Obj_AI_Hero>()
                     .FirstOrDefault(
-                        obj => obj.IsValidTarget(W.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.W));
+                        obj =>
+                            obj.IsValidTarget(W.Range) && !obj.IsInvulnerable &&
+                            obj.Health < Player.GetSpellDamage(obj, SpellSlot.W));
 
-            return canCast && unit.IsValidTarget(W.Range + 100) && (ult ? R.Cast(unit).IsCasted() : W.Cast(unit).IsCasted());
+            return canCast && unit.IsValidTarget(W.Range + 100) &&
+                   (ult ? R.Cast(unit).IsCasted() : W.Cast(unit).IsCasted());
         }
 
         private static bool CastE(bool ult = false)
@@ -144,7 +156,9 @@ namespace LeBlanc
             var unit =
                 ObjectManager.Get<Obj_AI_Hero>()
                     .FirstOrDefault(
-                        obj => obj.IsValidTarget(E.Range) && obj.Health < Player.GetSpellDamage(obj, SpellSlot.E));
+                        obj =>
+                            obj.IsValidTarget(E.Range) && !obj.IsInvulnerable &&
+                            obj.Health < Player.GetSpellDamage(obj, SpellSlot.E));
 
             if (!canCast || !unit.IsValidTarget(E.Range))
             {

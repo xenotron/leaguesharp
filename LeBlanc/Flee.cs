@@ -1,7 +1,11 @@
-﻿using System;
+﻿#region
+
+using System;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+
+#endregion
 
 namespace LeBlanc
 {

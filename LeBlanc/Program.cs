@@ -1,10 +1,14 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using LeBlanc.Properties;
 using SharpDX;
 using Color = System.Drawing.Color;
+
+#endregion
 
 namespace LeBlanc
 {
@@ -175,7 +179,7 @@ namespace LeBlanc
             }
 
             var wCircle = Menu.Item("DrawWCombo").GetValue<Circle>();
-            var dfgReady = (Items.DFG.HasItem() && Items.DFG.IsReady()) || (Items.BFT.HasItem() && Items.BFT.IsReady());
+            var dfgReady = (Items.Dfg.HasItem() && Items.Dfg.IsReady()) || (Items.Bft.HasItem() && Items.Bft.IsReady());
             var canDraw = wCircle.Active && W.IsReady(1) && R.IsReady() && dfgReady;
 
             if (canDraw)
@@ -195,7 +199,10 @@ namespace LeBlanc
                             Player.Position, circle.Radius, spell.IsReady() ? circle.Color : Color.Red);
                     }
                 }
-                catch {}
+                catch
+                {
+                    // ignored
+                }
             }
         }
 
@@ -260,27 +267,27 @@ namespace LeBlanc
                 damage += Player.GetSpellDamage(enemy, SpellSlot.W);
             }
 
-            if (Items.DFG.IsReady())
+            if (Items.Dfg.IsReady())
             {
                 damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.Dfg);
             }
 
-            if (Items.BFT.IsReady())
+            if (Items.Bft.IsReady())
             {
                 damage += .2f * damage + Player.GetItemDamage(enemy, Damage.DamageItems.BlackFireTorch);
             }
 
-            if (Items.FQC.IsReady())
+            if (Items.Fqc.IsReady())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.FrostQueenClaim);
             }
 
-            if (Items.BOTRK.IsReady())
+            if (Items.Botrk.IsReady())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.Botrk);
             }
 
-            if (Items.LT.HasItem())
+            if (Items.Lt.HasItem())
             {
                 damage += Player.GetItemDamage(enemy, Damage.DamageItems.LiandrysTorment);
             }

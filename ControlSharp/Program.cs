@@ -16,10 +16,8 @@ namespace ControlSharp
     {
         public static int[] ControllerArray = { 0, 1, 2, 3, 4 };
         public static Menu Menu;
-
         public static Orbwalking.Orbwalker OrbWalker;
         public static Orbwalking.OrbwalkingMode CurrentMode = Orbwalking.OrbwalkingMode.None;
-
         public static GamepadState Controller;
         public static Render.Circle CurrentPosition;
         public static Render.Text Text;
@@ -32,8 +30,10 @@ namespace ControlSharp
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            foreach (var c in
-                ControllerArray.Select(controlId => new Controller((UserIndex) controlId)).Where(c => c.IsConnected))
+            foreach (
+                var c in
+                    ControllerArray.Select(controlId => new Controller((UserIndex) controlId)).Where(c => c.IsConnected)
+                )
             {
                 Controller = new GamepadState(c.UserIndex);
             }
@@ -53,8 +53,10 @@ namespace ControlSharp
             {
                 CurrentPosition = new Render.Circle(ObjectManager.Player.Position, 100, Color.Red, 2);
                 CurrentPosition.Add();
-                Text = new Render.Text(new Vector2(50, 50), "MODE: " + CurrentMode, 30, new ColorBGRA(255, 0, 0, 255));
-                Text.OutLined = true;
+                Text = new Render.Text(new Vector2(50, 50), "MODE: " + CurrentMode, 30, new ColorBGRA(255, 0, 0, 255))
+                {
+                    OutLined = true
+                };
                 Text.Add();
             }
 
@@ -71,8 +73,10 @@ namespace ControlSharp
             {
                 CurrentPosition = new Render.Circle(ObjectManager.Player.Position, 100, Color.Red, 2);
                 CurrentPosition.Add();
-                Text = new Render.Text(new Vector2(50, 50), "MODE: " + CurrentMode, 30, new ColorBGRA(255, 0, 0, 255));
-                Text.OutLined = true;
+                Text = new Render.Text(new Vector2(50, 50), "MODE: " + CurrentMode, 30, new ColorBGRA(255, 0, 0, 255))
+                {
+                    OutLined = true
+                };
                 Text.Add();
             }
             else
@@ -111,17 +115,17 @@ namespace ControlSharp
                 CurrentMode = Orbwalking.OrbwalkingMode.None;
             }
 
-            var S1 = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner1);
-            var S2 = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner2);
+            var s1 = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner1);
+            var s2 = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner2);
 
-            if (Controller.LeftTrigger > 0 && S1.State == SpellState.Ready)
+            if (Controller.LeftTrigger > 0 && s1.State == SpellState.Ready)
             {
-                SummonerCastLogic(S1);
+                SummonerCastLogic(s1);
             }
 
-            if (Controller.RightTrigger > 0 && S2.State == SpellState.Ready)
+            if (Controller.RightTrigger > 0 && s2.State == SpellState.Ready)
             {
-                SummonerCastLogic(S2);
+                SummonerCastLogic(s2);
             }
 
             Text.text = "MODE: " + CurrentMode;

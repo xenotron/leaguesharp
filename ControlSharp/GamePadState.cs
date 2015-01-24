@@ -23,18 +23,14 @@ namespace ControlSharp
         public DPadState DPad { get; private set; }
         public ThumbstickState LeftStick { get; private set; }
         public ThumbstickState RightStick { get; private set; }
-
         public bool A { get; private set; }
         public bool B { get; private set; }
         public bool X { get; private set; }
         public bool Y { get; private set; }
-
         public bool RightShoulder { get; private set; }
         public bool LeftShoulder { get; private set; }
-
         public bool Start { get; private set; }
         public bool Back { get; private set; }
-
         public float RightTrigger { get; private set; }
         public float LeftTrigger { get; private set; }
 
@@ -106,6 +102,7 @@ namespace ControlSharp
                 (gamepadState.Buttons & GamepadButtonFlags.RightThumb) != 0);
         }
 
+/*
         private static Vector2 Normalize(short rawX, short rawY, short threshold)
         {
             var value = new Vector2(rawX, rawY);
@@ -120,6 +117,7 @@ namespace ControlSharp
 
             return direction * normalizedMagnitude;
         }
+*/
 
         public struct DPadState
         {

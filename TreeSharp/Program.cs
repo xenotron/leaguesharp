@@ -1,11 +1,16 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Media;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 using TreeSharp.Properties;
+
+#endregion
 
 namespace TreeSharp
 {
@@ -13,7 +18,6 @@ namespace TreeSharp
     {
         public static List<Obj_AI_Base> WardList = new List<Obj_AI_Base>();
         public static Render.Text WardText;
-
         public static SoundObject OnWardSound;
 
         private static void Main(string[] args)
@@ -23,7 +27,8 @@ namespace TreeSharp
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            WardText = new Render.Text("Ward Count: 0/3", Drawing.Width/2 + 500, Drawing.Height - 50, 22, SharpDX.Color.Yellow);
+            WardText = new Render.Text(
+                "Ward Count: 0/3", Drawing.Width / 2 + 500, Drawing.Height - 50, 22, Color.Yellow);
             WardText.Add();
 
             OnWardSound = new SoundObject(Resources.OnWard);
@@ -32,7 +37,7 @@ namespace TreeSharp
             //Game.OnGameNotifyEvent += Game_OnGameNotifyEvent;
         }
 
-        static void GameObject_OnCreate(GameObject sender, EventArgs args)
+        private static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
             var unit = sender as Obj_AI_Minion;
 
@@ -46,41 +51,21 @@ namespace TreeSharp
                 WardList.Add(unit);
             }
 
-            if (unit.Name.ToLower().Contains("ward") && sender.IsAlly && ObjectManager.Player.Distance(sender.Position) < 500)
+            if (unit.Name.ToLower().Contains("ward") && sender.IsAlly &&
+                ObjectManager.Player.Distance(sender.Position) < 500)
             {
                 OnWardSound.Play();
             }
-
         }
 
-        static void Game_OnGameUpdate(EventArgs args)
+        private static void Game_OnGameUpdate(EventArgs args)
         {
             var wardCount = WardList.Count(w => w.IsValid && !w.IsDead && w.Health > 0 && w.IsVisible);
             WardText.text = "Ward Count: " + wardCount + "/3";
-            WardText.Color = wardCount == 3 ? SharpDX.Color.Red : SharpDX.Color.Yellow;
+            WardText.Color = wardCount == 3 ? Color.Red : Color.Yellow;
         }
+    }
 
-        private static void Game_OnGameNotifyEvent(GameNotifyEventArgs args)
-        {
-            if (args.NetworkId != ObjectManager.Player.NetworkId)
-            {
-                return;
-            }
-
-            if (args.EventId == GameEventId.OnChampionPentaKill)
-            {
-                return;
-            }
-
-            if (args.EventId == GameEventId.OnDie)
-            {
-                return;
-            }
-        }
-
-    
-        }
-    
 
     internal class SoundObject
     {

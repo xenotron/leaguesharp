@@ -44,7 +44,6 @@ namespace Humanizer
             LastMove = Environment.TickCount;
         }
 
-
         private static float GetDelay()
         {
             return Config.Item("MovementDelay").GetValue<Slider>().Value;

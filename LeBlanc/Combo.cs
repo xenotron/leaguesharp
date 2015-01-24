@@ -1,7 +1,11 @@
-﻿using System;
+﻿#region
+
+using System;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+
+#endregion
 
 namespace LeBlanc
 {
@@ -11,7 +15,7 @@ namespace LeBlanc
         public static Menu LocalMenu;
         public static WPosition WBackPosition;
         public static readonly string LeBlancWObject = "LeBlanc_Base_W_return_indicator.troy";
-        private static Obj_AI_Hero CurrentTarget;
+        private static Obj_AI_Hero _currentTarget;
 
         static Combo()
         {
@@ -107,31 +111,31 @@ namespace LeBlanc
         private static void ComboLogic()
         {
             var spellsUp = Q.IsReady() && W.IsReady() && E.IsReady() && R.IsReady();
-            var d = Player.Distance(CurrentTarget);
+            var d = Player.Distance(_currentTarget);
             var eFirst = Menu.Item("ComboEStart").GetValue<bool>();
             var castRE = R.IsReady(SpellSlot.E) && GetMenuUlt() == SpellSlot.E;
-            var qFirst = Q.IsInRange(CurrentTarget) && !castRE;
+            var qFirst = Q.IsInRange(_currentTarget) && !castRE;
 
             #region Items
 
             if (CanCast("Items"))
             {
-                if (spellsUp && d < Items.DFG.Range && Items.DFG.Cast(CurrentTarget))
+                if (spellsUp && d < Items.Dfg.Range && Items.Dfg.Cast(_currentTarget))
                 {
                     return;
                 }
 
-                if (spellsUp && d < Items.BFT.Range && Items.BFT.Cast(CurrentTarget))
+                if (spellsUp && d < Items.Bft.Range && Items.Bft.Cast(_currentTarget))
                 {
                     return;
                 }
 
-                if (d < Items.BOTRK.Range && Items.BOTRK.Cast(CurrentTarget))
+                if (d < Items.Botrk.Range && Items.Botrk.Cast(_currentTarget))
                 {
                     return;
                 }
 
-                if (d < Items.FQC.Range && Items.FQC.Cast(CurrentTarget))
+                if (d < Items.Fqc.Range && Items.Fqc.Cast(_currentTarget))
                 {
                     return;
                 }
@@ -169,36 +173,38 @@ namespace LeBlanc
 
         private static bool CastQ()
         {
-            return CanCast("Q") && Q.IsReady() && Q.CanCast(CurrentTarget) && Q.Cast(CurrentTarget).IsCasted();
+            return CanCast("Q") && Q.IsReady() && Q.CanCast(_currentTarget) && Q.Cast(_currentTarget).IsCasted();
         }
 
         private static bool CastW()
         {
             var canCast = CanCast("W") && W.IsReady(1);
-            var wRange = CurrentTarget.IsValidTarget(W.Range);
+            var wRange = _currentTarget.IsValidTarget(W.Range);
             var lowHealth = Player.HealthPercentage() <= Menu.Item("ComboWMinHP").GetValue<Slider>().Value;
-            return canCast && wRange && !lowHealth && W.Cast(CurrentTarget).IsCasted();
+            return canCast && wRange && !lowHealth && W.Cast(_currentTarget).IsCasted();
         }
 
+/*
         private static bool CastSecondW()
         {
             var canCast = CanCast("W2") && W.IsReady(2);
-            var isLowHP = Player.HealthPercentage() <= Menu.Item("MiscW2HP").GetValue<Slider>().Value;
+            var isLowHp = Player.HealthPercentage() <= Menu.Item("MiscW2HP").GetValue<Slider>().Value;
             var moreEnemiesInRange = WBackPosition.Position.CountEnemiesInRange(600) > Player.CountEnemiesInRange(600);
             var isFleeing = Program.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None;
             var spellDown = Menu.Item("ComboW2Spells").GetValue<bool>() && !Q.IsReady() && !E.IsReady() && !R.IsReady();
-            var cast = canCast && (isLowHP || spellDown) && !moreEnemiesInRange && !isFleeing;
+            var cast = canCast && (isLowHp || spellDown) && !moreEnemiesInRange && !isFleeing;
             return cast && W.Cast();
         }
+*/
 
         private static bool CastE()
         {
-            if (!CanCast("E") || !E.IsReady() || !E.CanCast(CurrentTarget) || Player.IsDashing())
+            if (!CanCast("E") || !E.IsReady() || !E.CanCast(_currentTarget) || Player.IsDashing())
             {
                 return false;
             }
 
-            var pred = E.GetPrediction(CurrentTarget);
+            var pred = E.GetPrediction(_currentTarget);
             return pred.Hitchance >= EHitChance && E.Cast(pred.CastPosition);
         }
 
@@ -212,25 +218,26 @@ namespace LeBlanc
                 return false;
             }
 
-            if (slot == SpellSlot.Q && Q.IsInRange(CurrentTarget))
+            if (slot == SpellSlot.Q && Q.IsInRange(_currentTarget))
             {
-                return R.Cast(SpellSlot.Q, CurrentTarget).IsCasted();
+                return R.Cast(SpellSlot.Q, _currentTarget).IsCasted();
             }
 
-            if (slot == SpellSlot.W && W.IsInRange(CurrentTarget))
+            if (slot == SpellSlot.W && W.IsInRange(_currentTarget))
             {
-                return R.Cast(SpellSlot.W, CurrentTarget).IsCasted();
+                return R.Cast(SpellSlot.W, _currentTarget).IsCasted();
             }
 
-            if (slot == SpellSlot.E && E.IsInRange(CurrentTarget))
+            if (slot != SpellSlot.E || !E.IsInRange(_currentTarget))
             {
-                E.Slot = SpellSlot.R;
-                var cast = E.CastIfHitchanceEquals(CurrentTarget, EHitChance);
-                E.Slot = SpellSlot.E;
-                return cast;
+                return false;
             }
 
-            return false;
+            E.Slot = SpellSlot.R;
+            var cast = E.CastIfHitchanceEquals(_currentTarget, EHitChance);
+            E.Slot = SpellSlot.E;
+
+            return cast;
         }
 
         public static bool CanCast(string spell)
@@ -247,37 +254,38 @@ namespace LeBlanc
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            CurrentTarget = Utils.GetTarget(GetComboRange());
+            _currentTarget = Utils.GetTarget(GetComboRange());
 
-            if (!Enabled)
+            if (!Enabled || _currentTarget.IsInvulnerable)
             {
                 return;
             }
 
-            if (CurrentTarget.IsValidTarget(GetComboRange()))
+            if (_currentTarget.IsValidTarget(GetComboRange()))
             {
                 ComboLogic();
                 return;
             }
 
-            CurrentTarget = Utils.GetTarget(W.Range * 2);
-            if (Menu.Item("GapCloseEnabled").GetValue<bool>() && CurrentTarget.IsValidTarget(W.Range * 2))
+            _currentTarget = Utils.GetTarget(W.Range * 2);
+            if (!Menu.Item("GapCloseEnabled").GetValue<bool>() || !_currentTarget.IsValidTarget(W.Range * 2))
             {
-                var canCast = CanCast("W") && W.IsReady(1) && R.IsReady();
-                var isTargetLow = CurrentTarget.HealthPercentage() <= Menu.Item("TargetHP").GetValue<Slider>().Value;
-                var isPlayerLow = Player.HealthPercentage() < Menu.Item("PlayerHP").GetValue<Slider>().Value;
-                var canDFG = (Items.DFG.HasItem() && Items.DFG.IsReady()) ||
-                             (Items.BFT.HasItem() && Items.BFT.IsReady());
-
-                if (!canCast || !isTargetLow || isPlayerLow || !canDFG)
-                {
-                    //Console.WriteLine("return");
-                    return;
-                }
-
-                var pos = Player.Position.Extend(CurrentTarget.ServerPosition, W.Range + 100);
-                if (W.Cast(pos)) {}
+                return;
             }
+
+            var canCast = CanCast("W") && W.IsReady(1) && R.IsReady();
+            var isTargetLow = _currentTarget.HealthPercentage() <= Menu.Item("TargetHP").GetValue<Slider>().Value;
+            var isPlayerLow = Player.HealthPercentage() < Menu.Item("PlayerHP").GetValue<Slider>().Value;
+            var canDfg = (Items.Dfg.HasItem() && Items.Dfg.IsReady()) || (Items.Bft.HasItem() && Items.Bft.IsReady());
+
+            if (!canCast || !isTargetLow || isPlayerLow || !canDfg)
+            {
+                //Console.WriteLine("return");
+                return;
+            }
+
+            var pos = Player.Position.Extend(_currentTarget.ServerPosition, W.Range + 100);
+            if (W.Cast(pos)) {}
         }
 
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -302,16 +310,17 @@ namespace LeBlanc
                 Utility.DelayAction.Add(
                     400, () =>
                     {
-                        var castDFG = CanCast("Items") && Items.DFG.HasItem() && Items.DFG.IsReady();
-                        var castBFT = CanCast("Items") && Items.BFT.HasItem() && Items.BFT.IsReady();
+                        var castDfg = CanCast("Items") && Items.Dfg.HasItem() && Items.Dfg.IsReady();
+                        var castBft = CanCast("Items") && Items.Bft.HasItem() && Items.Bft.IsReady();
 
-                        if (castDFG && Items.DFG.Cast(CurrentTarget))
+                        if (castDfg && Items.Dfg.Cast(_currentTarget))
                         {
                             return;
                         }
 
-                        if (castBFT && Items.BFT.Cast(CurrentTarget)) {}
+                        if (castBft && Items.Bft.Cast(_currentTarget)) {}
                     });
+
                 return;
             }
 
@@ -320,16 +329,16 @@ namespace LeBlanc
                 400, () =>
                 {
                     var canCastR = (name.Equals("DeathfireGrasp") || name.Equals("ItemBlackfireTorch")) &&
-                                   CurrentTarget.IsValidTarget(W.Range) && R.IsReady(SpellSlot.W);
+                                   _currentTarget.IsValidTarget(W.Range) && R.IsReady(SpellSlot.W);
 
                     if (!canCastR)
                     {
-                        Console.WriteLine(Player.Distance(CurrentTarget));
-                        Console.WriteLine("can't r");
+                        Console.WriteLine(Player.Distance(_currentTarget));
+                        Console.WriteLine(@"Can't R!");
                         return;
                     }
 
-                    R.Cast(SpellSlot.R, CurrentTarget);
+                    R.Cast(SpellSlot.R, _currentTarget);
                 });
         }
 
