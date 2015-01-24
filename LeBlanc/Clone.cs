@@ -33,7 +33,7 @@ namespace LeBlanc
 
         public static bool Enabled
         {
-            get { return !Player.IsDead && LocalMenu.Item("CloneEnabled").GetValue<bool>(); }
+            get { return !Player.IsDead && Menu.Item("CloneEnabled").GetValue<bool>(); }
         }
 
         private static Obj_AI_Hero Player
