@@ -167,7 +167,7 @@ namespace LeBlanc
         public static Obj_AI_Hero GetTarget(float range)
         {
             var target = TargetSelector.GetTarget(range, TargetSelector.DamageType.Magical);
-            return target.IsValidTarget(range) && !TargetSelector.IsInvulnerable(target, TargetSelector.DamageType.Magical, false) ? target : new Obj_AI_Hero();
+            return target.IsValidTarget(range) && !TargetSelector.IsInvulnerable(target, TargetSelector.DamageType.Magical, false) ? target : null;
         }
 
         public static void Troll()
