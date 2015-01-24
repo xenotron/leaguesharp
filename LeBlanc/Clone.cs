@@ -63,49 +63,55 @@ namespace LeBlanc
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            if (!Enabled)
+            try
             {
-                return;
+                if (!Enabled)
+                {
+                    return;
+                }
+
+                var pet = Pet; //Player.Pet as Obj_AI_Base;
+                var mode = Menu.Item("CloneMode").GetValue<StringList>().SelectedIndex;
+
+
+                if (pet == null || !pet.IsValid || pet.IsDead || pet.Health < 1)
+                {
+                    return;
+                }
+
+                var target = TargetSelector.GetTarget(800, TargetSelector.DamageType.Physical, true, null, pet.Position);
+
+                if (mode == 1 &&
+                    !(pet.CanAttack && !pet.IsWindingUp && !pet.Spellbook.IsAutoAttacking &&
+                      target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(pet))))
+                {
+                    mode = 0;
+                }
+
+                switch (mode)
+                {
+                    case 0: // toward player
+                        var pos = Player.GetWaypoints().Count > 1
+                            ? Player.GetWaypoints()[1].To3D()
+                            : Player.ServerPosition;
+                        Utility.DelayAction.Add(200, () => { pet.IssueOrder(GameObjectOrder.MovePet, pos); });
+                        break;
+                    case 1: //toward target
+                        pet.IssueOrder(GameObjectOrder.AutoAttackPet, target);
+                        break;
+                    case 2: //away from player
+                        Utility.DelayAction.Add(
+                            100,
+                            () =>
+                            {
+                                pet.IssueOrder(
+                                    GameObjectOrder.MovePet,
+                                    (pet.Position + 500 * ((pet.Position - Player.Position).Normalized())));
+                            });
+                        break;
+                }
             }
-
-            var pet = Pet; //Player.Pet as Obj_AI_Base;
-            var mode = Menu.Item("CloneMode").GetValue<StringList>().SelectedIndex;
-
-
-            if (pet == null || !pet.IsValid || pet.IsDead || pet.Health < 1)
-            {
-                return;
-            }
-
-            var target = TargetSelector.GetTarget(800, TargetSelector.DamageType.Physical, true, null, pet.Position);
-
-            if (mode == 1 &&
-                !(pet.CanAttack && !pet.IsWindingUp && !pet.Spellbook.IsAutoAttacking &&
-                  target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(pet))))
-            {
-                mode = 0;
-            }
-
-            switch (mode)
-            {
-                case 0: // toward player
-                    var pos = Player.GetWaypoints().Count > 1 ? Player.GetWaypoints()[1].To3D() : Player.ServerPosition;
-                    Utility.DelayAction.Add(200, () => { pet.IssueOrder(GameObjectOrder.MovePet, pos); });
-                    break;
-                case 1: //toward target
-                    pet.IssueOrder(GameObjectOrder.AutoAttackPet, target);
-                    break;
-                case 2: //away from player
-                    Utility.DelayAction.Add(
-                        100,
-                        () =>
-                        {
-                            pet.IssueOrder(
-                                GameObjectOrder.MovePet,
-                                (pet.Position + 500 * ((pet.Position - Player.Position).Normalized())));
-                        });
-                    break;
-            }
+            catch {}
         }
     }
 }
