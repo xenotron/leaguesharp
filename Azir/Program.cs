@@ -8,10 +8,7 @@ using System.Media;
 using Azir.Properties;
 using LeagueSharp;
 using LeagueSharp.Common;
-using LeagueSharp.Network.Packets;
 using SharpDX;
-using Color = System.Drawing.Color;
-using Packet = LeagueSharp.Network.Packets.Packet;
 
 #endregion
 
@@ -277,7 +274,7 @@ namespace Azir
                 W.Cast(turret.ServerPosition);
             }
 
-            UsePassive();
+          //  UsePassive();
         }
 
         #endregion
@@ -378,11 +375,7 @@ namespace Azir
                 return;
             }
 
-            foreach (var soldier in AzirSoldier.Where(soldier => soldier.NetworkId == sender.NetworkId))
-            {
-                AzirSoldier.Remove(soldier);
-                return;
-            }
+            AzirSoldier.RemoveAll(h => h.NetworkId.Equals(sender.NetworkId));
         }
 
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
@@ -406,7 +399,7 @@ namespace Azir
         {
             PurgeSoldiers();
             TurretLogic();
-            UsePassive();
+           // UsePassive();
             Harass();
             Combo();
             Flee();
@@ -454,7 +447,7 @@ namespace Azir
                 : AzirSoldier.Where(obj => obj.IsValid).OrderByDescending(obj => obj.Distance(position)).ToList();
         }
 
-        public static void UsePassive()
+       /* public static void UsePassive()
         {
             if (!Menu.Item("UsePassive").GetValue<bool>())
             {
@@ -477,7 +470,7 @@ namespace Azir
 
             var p = new PKT_InteractReq { NetworkId = Player.NetworkId, TargetNetworkId = turret.NetworkId };
             p.Encode().SendAsPacket();
-        }
+        }*/
 
         #endregion
     }
