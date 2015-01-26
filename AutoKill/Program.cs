@@ -94,7 +94,7 @@ namespace AutoKill
                         h =>
                             h.IsValidTarget(Ignite.Range) &&
                             h.Health < Player.GetSummonerSpellDamage(h, Damage.SummonerSpell.Ignite))
-                    .Any(enemy => Ignite.Cast(enemy) == Spell.CastStates.SuccessfullyCasted);
+                    .Any(enemy => Ignite.Cast(enemy).IsCasted());
         }
 
         private static bool CastSmite()
