@@ -49,7 +49,9 @@ namespace Humanizer
 
         private static void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
-            if (sender == null || !sender.Owner.IsMe || Menu.Item("Enabled" + (int) args.Slot).GetValue<bool>())
+            if (sender == null || !sender.Owner.IsMe || args.Slot.Equals(SpellSlot.Summoner1) ||
+                args.Slot.Equals(SpellSlot.Summoner2) || args.Slot.Equals(SpellSlot.Recall) ||
+                args.Slot.Equals(SpellSlot.Unknown) || Menu.Item("Enabled" + (int) args.Slot).GetValue<bool>())
             {
                 return;
             }
