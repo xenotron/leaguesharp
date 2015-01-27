@@ -28,9 +28,9 @@ namespace Humanizer
 
             var spells = Menu.AddSubMenu(new Menu("Spells", "Spells"));
 
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i <= 3; i++)
             {
-                LastCast[i] = 0;
+                LastCast.Add(0);
                 var spell = SpellList[i];
                 var menu = spells.AddSubMenu(new Menu(spell, spell));
                 menu.AddItem(new MenuItem("Enabled" + i, "Delay " + spell, true).SetValue(true));
