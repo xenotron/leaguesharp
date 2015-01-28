@@ -160,6 +160,9 @@ namespace AutoLevelSpells
                 case "Jinx":
                     sequence = new[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
                     break;
+                case "Kalista":
+                    sequence = new[] { 3, 1, 3, 2, 3, 4, 3, 1, 3, 1, 4, 1, 2, 1, 2, 4, 2, 2 };
+                    break;    
                 case "Karma":
                     sequence = new[] { 1, 3, 1, 2, 3, 1, 3, 1, 3, 1, 3, 1, 3, 2, 2, 2, 2, 2 };
                     break;
